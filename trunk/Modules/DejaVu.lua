@@ -42,8 +42,8 @@ function Postal_DejaVu:SendMailFrame_SendMail()
 	self.hooks["SendMailFrame_SendMail"]()
 end
 
-function Postal_DejaVu:MailFrameTab_OnClick(tab)
-	self.hooks["MailFrameTab_OnClick"](tab)
+function Postal_DejaVu:MailFrameTab_OnClick(button, tab)
+	self.hooks["MailFrameTab_OnClick"](button, tab)
 	if lastMailed and not SendMailNameEditBox:GetText() then
 		SendMailNameEditBox:SetText(lastMailed)
 		SendMailNameEditBox:HighlightText()

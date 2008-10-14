@@ -7,9 +7,6 @@ assert( Postal, "Postal not found!")
 ------------------------------
 
 local L = AceLibrary("AceLocale-2.2"):new("Postal")
-
-local mod, floor, format = mod, floor, format
-local GOLD, SILVER, COPPER = GOLD, SILVER, COPPER
 local money
 
 ----------------------------------

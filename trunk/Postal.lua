@@ -4,32 +4,6 @@
 local L = AceLibrary("AceLocale-2.2"):new("Postal")
 local dewdrop = AceLibrary("Dewdrop-2.0")
 
-local COPPER_ABBR, SILVER_ABBR, GOLD_ABBR
-if GOLD then -- for pre 2.4.2 compatibility, remove in next patch
-	COPPER_ABBR = string.lower(string.sub(COPPER, 1, 1))
-	SILVER_ABBR = string.lower(string.sub(SILVER, 1, 1))
-	GOLD_ABBR = string.lower(string.sub(GOLD, 1, 1))
-	if (string.byte(COPPER_ABBR) or 128) > 127 then
-		-- non-western
-		COPPER_ABBR = COPPER
-		SILVER_ABBR = SILVER
-		GOLD_ABBR = GOLD
-	end
-	if ( GetLocale() == "zhTW" ) then
-		COPPER_ABBR = "銅"
-		SILVER_ABBR = "銀"
-		GOLD_ABBR = "金"
-	elseif ( GetLocale() == "zhCN" ) then
-		COPPER_ABBR = "铜"
-		SILVER_ABBR = "银"
-		GOLD_ABBR = "金"
-	elseif ( GetLocale() == "koKR" ) then
-		COPPER_ABBR = "코퍼"
-		SILVER_ABBR = "실버"
-		GOLD_ABBR = "골드"
-	end
-end
-
 ---------------------------------
 --      Addon Declaration      --
 ---------------------------------
@@ -282,22 +256,10 @@ function Postal:GetMoneyString(money)
 	local copper = mod(money, 100)
 
 	if gold > 0 then
-		if GOLD_ABBR then
-			return format("%d%s %d%s %d%s", gold, GOLD_ABBR, silver, SILVER_ABBR, copper, COPPER_ABBR)
-		else
-			return format(GOLD_AMOUNT, gold).." "..format(SILVER_AMOUNT, silver).." "..format(COPPER_AMOUNT, copper)
-		end
+		return format(GOLD_AMOUNT.." "..SILVER_AMOUNT.." "..COPPER_AMOUNT, gold, silver, copper)
 	elseif silver > 0 then
-		if GOLD_ABBR then
-			return format("%d%s %d%s", silver, SILVER_ABBR, copper, COPPER_ABBR)
-		else
-			return format(SILVER_AMOUNT, silver).." "..format(COPPER_AMOUNT, copper)
-		end
+		return format(SILVER_AMOUNT.." "..COPPER_AMOUNT, silver, copper)
 	else
-		if GOLD_ABBR then
-			return format("%d%s", copper, COPPER_ABBR)
-		else
-			return format(COPPER_AMOUNT, copper)
-		end
+		return format(COPPER_AMOUNT, copper)
 	end
 end

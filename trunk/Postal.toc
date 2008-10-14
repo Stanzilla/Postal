@@ -1,5 +1,5 @@
-## Interface: 20400
-## Version: 2.1
+## Interface: 30000
+## Version: 3.0.0
 ## Title: Postal |cff7fff7f -Ace2-|r
 ## Author: Xinhuan
 ## X-Credits: Ammo, Rabbit, Grennon
@@ -19,8 +19,18 @@
 ## X-LoadOn-Slash: /postal
 ## X-Email: xinhuan AT gmail DOT com
 
-## X-Embeds: Ace2, DewdropLib
-embeds.xml
+#@no-lib-strip@
+Libs\AceLibrary\AceLibrary.lua
+Libs\AceOO-2.0\AceOO-2.0.lua
+Libs\AceAddon-2.0\AceAddon-2.0.lua
+Libs\AceHook-2.1\AceHook-2.1.lua
+Libs\AceEvent-2.0\AceEvent-2.0.lua
+Libs\AceDB-2.0\AceDB-2.0.lua
+Libs\AceLocale-2.2\AceLocale-2.2.lua
+Libs\AceConsole-2.0\AceConsole-2.0.lua
+Libs\AceModuleCore-2.0\AceModuleCore-2.0.lua
+Libs\Dewdrop-2.0\Dewdrop-2.0.lua
+#@end-no-lib-strip@
 
 #locales
 Locales\ruRU.lua
