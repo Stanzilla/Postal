@@ -16,7 +16,7 @@ Postal_Wire = Postal:NewModule("Wire")
 Postal_Wire.revision = tonumber(string.sub("$Revision$", 12, -3))
 
 function Postal_Wire:OnEnable()
-	self:SecureHook(SendMailMoney, "onvalueChangedFunc")
+	self:SecureHook(SendMailMoney, "onValueChangedFunc")
 end
 
 function Postal_Wire:OnDisable()
@@ -24,19 +24,13 @@ function Postal_Wire:OnDisable()
 end
 
 local g, s, c
-if GOLD then -- remove on next patch, for pre 2.4.2 compat
-	g = L["^%[%d+g %d+s %d+c%]$"]
-	s = L["^%[%d+s %d+c%]$"]
-	c = L["^%[%d+c%]$"]
-else
-	g = "^%["..GOLD_AMOUNT.." "..SILVER_AMOUNT.." "..COPPER_AMOUNT.."%]$"
-	s = "^%["..SILVER_AMOUNT.." "..COPPER_AMOUNT.."%]$"
-	c = "^%["..COPPER_AMOUNT.."%]$"
-	g = gsub(g, "%%d", "%%d+")
-	s = gsub(s, "%%d", "%%d+")
-	c = gsub(c, "%%d", "%%d+")
-end
-function Postal_Wire:onvalueChangedFunc()
+g = "^%["..GOLD_AMOUNT.." "..SILVER_AMOUNT.." "..COPPER_AMOUNT.."%]$"
+s = "^%["..SILVER_AMOUNT.." "..COPPER_AMOUNT.."%]$"
+c = "^%["..COPPER_AMOUNT.."%]$"
+g = gsub(g, "%%d", "%%d+")
+s = gsub(s, "%%d", "%%d+")
+c = gsub(c, "%%d", "%%d+")
+function Postal_Wire:onValueChangedFunc()
 	local subject = SendMailSubjectEditBox:GetText()
 	if subject == ""
 	or subject:find(g)

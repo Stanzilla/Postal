@@ -157,8 +157,8 @@ function Postal_Express:InboxFrameItem_OnEnter()
 	tooltip:Show()
 end
 
-function Postal_Express:InboxFrame_OnClick(index)
-	if IsShiftKeyDown() then
+function Postal_Express:InboxFrame_OnClick(button, index)
+	--[[if IsShiftKeyDown() then
 		mailIndex = index
 		attachIndex = ATTACHMENTS_MAX_RECEIVE
 		invFull = nil
@@ -173,13 +173,14 @@ function Postal_Express:InboxFrame_OnClick(index)
 			self:RegisterEvent("UI_ERROR_MESSAGE")
 		end
 		self:ProcessNext()
-	elseif IsControlKeyDown() then
+	else]]
+	if IsControlKeyDown() then
 		local wasReturned, _, canReply = select(10, GetInboxHeaderInfo(index))
 		if not wasReturned and canReply then
 			ReturnInboxItem(index)
 		end
 	else
-		self.hooks["InboxFrame_OnClick"](index)
+		self.hooks["InboxFrame_OnClick"](button, index)
 	end
 end
 
