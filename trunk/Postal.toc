@@ -1,5 +1,5 @@
 ## Interface: 30000
-## Version: 3.0.0
+## Version: 3.0.1
 ## Title: Postal |cff7fff7f -Ace2-|r
 ## Author: Xinhuan
 ## X-Credits: Ammo, Rabbit, Grennon

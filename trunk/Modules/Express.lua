@@ -193,7 +193,7 @@ function Postal_Express:OnTooltipSetItem(tooltip, ...)
 end
 
 function Postal_Express:ContainerFrameItemButton_OnModifiedClick(...)
-	if select(1, ...) == "LeftButton" and IsAltKeyDown() and SendMailFrame:IsVisible() and not CursorHasItem() then
+	if select(2, ...) == "LeftButton" and IsAltKeyDown() and SendMailFrame:IsVisible() and not CursorHasItem() then
 		local bag, slot = this:GetParent():GetID(), this:GetID()
 		local texture, count = GetContainerItemInfo(bag, slot)
 		PickupContainerItem(bag, slot)
