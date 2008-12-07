@@ -59,7 +59,7 @@ function Postal_Wire:onValueChangedFunc()
 	end
 end
 
-if GetLocale == "ruRU" then
+if GetLocale() == "ruRU" then
 	function Postal_Wire:ruRUonValueChangedFunc(money)
 		local gold = floor(money / 10000)
 		local silver = floor((money - gold * 10000) / 100)
