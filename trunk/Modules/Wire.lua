@@ -1,34 +1,14 @@
-﻿--[[ Postal_Wire: Update Subject Field with Money Amount if blank ]]--
-
-assert( Postal, "Postal not found!")
-
-------------------------------
---      Are you local?      --
-------------------------------
-
-local L = AceLibrary("AceLocale-2.2"):new("Postal")
-
-----------------------------------
---      Module Declaration      --
-----------------------------------
-
-Postal_Wire = Postal:NewModule("Wire")
-Postal_Wire.revision = tonumber(string.sub("$Revision$", 12, -3))
-
-function Postal_Wire:OnEnable()
-	self:SecureHook(SendMailMoney, "onValueChangedFunc")
-end
-
-function Postal_Wire:OnDisable()
-	-- Disabling modules unregisters all events/hook automatically
-end
+﻿local Postal = LibStub("AceAddon-3.0"):GetAddon("Postal")
+local Postal_Wire = Postal:NewModule("Wire", "AceHook-3.0")
+local L = LibStub("AceLocale-3.0"):GetLocale("Postal")
+Postal_Wire.description = L["Set subject field to value of coins sent if subject is blank."]
 
 local g, s, c
 g = "^%["..GOLD_AMOUNT.." "..SILVER_AMOUNT.." "..COPPER_AMOUNT.."%]$"
 s = "^%["..SILVER_AMOUNT.." "..COPPER_AMOUNT.."%]$"
 c = "^%["..COPPER_AMOUNT.."%]$"
 if GetLocale() == "ruRU" then
-	--Because ruRU is silly and has these constants.
+	--Because ruRU has these escaped strings which can't be in mail subjects.
 	--COPPER_AMOUNT = "%d |4медная монета:медные монеты:медных монет;"; -- Lowest value coin denomination
 	--SILVER_AMOUNT = "%d |4серебряная:серебряные:серебряных;"; -- Mid value coin denomination
 	--GOLD_AMOUNT = "%d |4золотая:золотые:золотых;"; -- Highest value coin denomination
@@ -39,37 +19,42 @@ end
 g = gsub(g, "%%d", "%%d+")
 s = gsub(s, "%%d", "%%d+")
 c = gsub(c, "%%d", "%%d+")
+
+function Postal_Wire:OnEnable()
+	self:RawHook(SendMailMoney, "onValueChangedFunc", true)
+end
+
+-- Disabling modules unregisters all events/hook automatically
+--function Postal_Wire:OnDisable()
+--end
+
 function Postal_Wire:onValueChangedFunc()
 	local subject = SendMailSubjectEditBox:GetText()
-	if subject == ""
-	or subject:find(g)
-	or subject:find(s)
-	or subject:find(c)
-	then
-		local copper = MoneyInputFrame_GetCopper(SendMailMoney)
-		if copper and copper > 0 then
+	if subject == "" or subject:find(g) or subject:find(s) or subject:find(c) then
+		local money = MoneyInputFrame_GetCopper(SendMailMoney)
+		if money and money > 0 then
+			local gold = floor(money / 10000)
+			local silver = floor((money - gold * 10000) / 100)
+			local copper = mod(money, 100)
 			if GetLocale() == "ruRU" then
-				self:ruRUonValueChangedFunc(copper)
+				if gold > 0 then
+					SendMailSubjectEditBox:SetText(format("[%d+з %d+с %d+м]", gold, silver, copper))
+				elseif silver > 0 then
+					SendMailSubjectEditBox:SetText(format("[%d+с %d+м]", silver, copper))
+				else
+					SendMailSubjectEditBox:SetText(format("[%d+м]", copper))
+				end
 			else
-				SendMailSubjectEditBox:SetText("["..self.core:GetMoneyString(copper).."]")
+				if gold > 0 then
+					SendMailSubjectEditBox:SetText(format("["..GOLD_AMOUNT.." "..SILVER_AMOUNT.." "..COPPER_AMOUNT.."]", gold, silver, copper))
+				elseif silver > 0 then
+					SendMailSubjectEditBox:SetText(format("["..SILVER_AMOUNT.." "..COPPER_AMOUNT.."]", silver, copper))
+				else
+					SendMailSubjectEditBox:SetText(format("["..COPPER_AMOUNT.."]", copper))
+				end
 			end
 		else
 			SendMailSubjectEditBox:SetText("")
-		end
-	end
-end
-
-if GetLocale() == "ruRU" then
-	function Postal_Wire:ruRUonValueChangedFunc(money)
-		local gold = floor(money / 10000)
-		local silver = floor((money - gold * 10000) / 100)
-		local copper = mod(money, 100)
-		if gold > 0 then
-			SendMailSubjectEditBox:SetText(format("[%d+з %d+с %d+м]", gold, silver, copper))
-		elseif silver > 0 then
-			SendMailSubjectEditBox:SetText(format("[%d+с %d+м]", silver, copper))
-		else
-			SendMailSubjectEditBox:SetText(format("[%d+м]", copper))
 		end
 	end
 end
