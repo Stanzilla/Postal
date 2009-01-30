@@ -1,28 +1,17 @@
-﻿--[[ Postal_Rake: Display summary of money gained from opening mail. ]]--
+﻿local Postal = LibStub("AceAddon-3.0"):GetAddon("Postal")
+local Postal_Rake = Postal:NewModule("Rake", "AceEvent-3.0")
+local L = LibStub("AceLocale-3.0"):GetLocale("Postal")
+Postal_Rake.description = L["Prints the amount of money collected during a mail session."]
 
-assert( Postal, "Postal not found!")
-
-------------------------------
---      Are you local?      --
-------------------------------
-
-local L = AceLibrary("AceLocale-2.2"):new("Postal")
 local money
-
-----------------------------------
---      Module Declaration      --
-----------------------------------
-
-Postal_Rake = Postal:NewModule("Rake")
-Postal_Rake.revision = tonumber(string.sub("$Revision$", 12, -3))
 
 function Postal_Rake:OnEnable()
 	self:RegisterEvent("MAIL_SHOW")
 end
 
-function Postal_Rake:OnDisable()
-	-- Disabling modules unregisters all events/hook automatically
-end
+-- Disabling modules unregisters all events/hook automatically
+--function Postal_Rake:OnDisable()
+--end
 
 function Postal_Rake:MAIL_SHOW()
 	money = GetMoney()
@@ -33,6 +22,6 @@ function Postal_Rake:MAIL_CLOSED()
 	self:UnregisterEvent("MAIL_CLOSED")
 	money = GetMoney() - money
 	if money > 0 then
-		self.core:Print(L["Collected"].." "..self.core:GetMoneyString(money))
+		Postal:Print(L["Collected"].." "..Postal:GetMoneyString(money))
 	end
 end

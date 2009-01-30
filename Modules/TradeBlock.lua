@@ -1,11 +1,7 @@
-assert( Postal, "Postal not found!")
-
-----------------------------------
---      Module Declaration      --
-----------------------------------
-
-Postal_TradeBlock = Postal:NewModule("TradeBlock")
-Postal_TradeBlock.revision = tonumber(string.sub("$Revision$", 12, -3))
+local Postal = LibStub("AceAddon-3.0"):GetAddon("Postal")
+local Postal_TradeBlock = Postal:NewModule("TradeBlock", "AceEvent-3.0")
+local L = LibStub("AceLocale-3.0"):GetLocale("Postal")
+Postal_TradeBlock.description = L["Block incoming trade requests while in a mail session."]
 
 function Postal_TradeBlock:OnEnable()
 	self:RegisterEvent("MAIL_SHOW")

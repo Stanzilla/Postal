@@ -1,109 +1,25 @@
-﻿--[[ Postal Express: Mouse Shortcuts for Mail ]]--
---shift-click to take item/money from mail
---ctrl-click to return mail
---alt-click to add item to SendMailFrame
---mousewheel to scroll the inbox
+﻿local Postal = LibStub("AceAddon-3.0"):GetAddon("Postal")
+local Postal_Express = Postal:NewModule("Express", "AceEvent-3.0", "AceHook-3.0")
+local L = LibStub("AceLocale-3.0"):GetLocale("Postal")
+Postal_Express.description = L["Mouse click short cuts for mail."]
+Postal_Express.description2 = L["|cFFFFCC00*|r Shift-Click to take item/money from mail.\
+|cFFFFCC00*|r Ctrl-Click to return mail.\
+|cFFFFCC00*|r Alt-Click to move an item from your inventory to the current outgoing mail (same as right click in default UI).\
+|cFFFFCC00*|r Mousewheel to scroll the inbox."]
 
-assert( Postal, "Postal not found!")
-
-------------------------------
---      Are you local?      --
-------------------------------
-
-local L = AceLibrary("AceLocale-2.2"):new("Postal")
-
-local mailIndex, attachIndex
-local lastmailIndex, lastattachIndex, lastmailmoneyIndex
-local invFull
-local lastItem
-
-----------------------------------
---      Module Declaration      --
-----------------------------------
-
-Postal_Express = Postal:NewModule("Express")
-Postal_Express.revision = tonumber(string.sub("$Revision$", 12, -3))
-Postal_Express.defaults = {
-	EnableAltClick = true,
-	AutoSend = true,
-	MouseWheel = true,
-}
-
-Postal_Express.consoleOptions = {
-	type = 'group',
-	name = L["Express options"],
-	desc = L["Options for the Express module"],
-	args = {
-		EnableAltClick = {
-			name = L["Enable Alt-Click to send mail"], type = 'toggle',
-			desc = L["If this option is on, Alt-Clicking an item in your bags will send it instantly to the player in the To: field"],
-			get = function() return Postal_Express.db.char.EnableAltClick end,
-			set = function(v)
-				local self = Postal_Express
-				self.db.char.EnableAltClick = v
-				self.consoleOptions.args.AutoSend.disabled = not v
-				if v then
-					if MailFrame:IsVisible() and not self:IsHooked(GameTooltip, "OnTooltipSetItem") then
-						self:HookScript(GameTooltip, "OnTooltipSetItem")
-						self:Hook("ContainerFrameItemButton_OnModifiedClick", true)
-					end
-				else
-					if self:IsHooked(GameTooltip, "OnTooltipSetItem") then
-						self:Unhook(GameTooltip, "OnTooltipSetItem")
-						self:Unhook("ContainerFrameItemButton_OnModifiedClick")
-					end
-				end
-			end,
-			order = 10,
-		},
-		AutoSend = {
-			type = 'toggle',
-			name = L["Auto-Send on Alt-Click"],
-			desc = L["With this option on, Postal will mail an item as soon as it is attached if there is a recipient filled in."],
-			get = function() return Postal_Express.db.char.AutoSend end,
-			set = function(v) Postal_Express.db.char.AutoSend = v end,
-			order = 20,
-		},
-		MouseWheel = {
-			type = 'toggle',
-			name = L["Mousewheel to scroll Inbox"],
-			desc = L["Scroll Inbox pages using the Mousewheel."],
-			get = function() return Postal_Express.db.char.MouseWheel end,
-			set = function(v)
-				local self = Postal_Express
-				self.db.char.MouseWheel = v
-				if v then
-					if not self:IsHooked(MailFrame, "OnMouseWheel") then
-						self:HookScript(MailFrame, "OnMouseWheel", "InboxMouseScroll")
-					end
-				else
-					if self:IsHooked(MailFrame, "OnMouseWheel") then
-						self:Unhook(MailFrame, "OnMouseWheel")
-					end
-				end
-			end,
-			order = 30,
-		},
-	},
-}
+local _G = getfenv(0)
 
 function Postal_Express:MAIL_SHOW()
-	if self.db.char.EnableAltClick and not self:IsHooked(GameTooltip, "OnTooltipSetItem") then
+	if Postal.db.profile.Express.EnableAltClick and not self:IsHooked(GameTooltip, "OnTooltipSetItem") then
 		self:HookScript(GameTooltip, "OnTooltipSetItem")
-		self:Hook("ContainerFrameItemButton_OnModifiedClick", true)
+		self:RawHook("ContainerFrameItemButton_OnModifiedClick", true)
 	end
 	self:RegisterEvent("MAIL_CLOSED", "Reset")
 	self:RegisterEvent("PLAYER_LEAVING_WORLD", "Reset")
 end
 
-function Postal_Express:Reset()
-	if self:IsEventRegistered("Postal_Express_Next") then
-		self:UnregisterEvent("Postal_Express_Next")
-	end
-	if self:IsEventRegistered("UI_ERROR_MESSAGE") then
-		self:UnregisterEvent("UI_ERROR_MESSAGE")
-	end
-	if (event == "MAIL_CLOSED" or event == "PLAYER_LEAVING_WORLD") then
+function Postal_Express:Reset(event)
+	if event == "MAIL_CLOSED" or event == "PLAYER_LEAVING_WORLD" then
 		if self:IsHooked(GameTooltip, "OnTooltipSetItem") then
 			self:Unhook(GameTooltip, "OnTooltipSetItem")
 			self:Unhook("ContainerFrameItemButton_OnModifiedClick")
@@ -114,24 +30,23 @@ function Postal_Express:Reset()
 end
 	
 function Postal_Express:OnEnable()
-	self:Hook("InboxFrame_OnClick", true)
-	self:SecureHook("InboxFrameItem_OnEnter")
+	self:RawHook("InboxFrame_OnClick", true)
+	self:RawHook("InboxFrame_OnModifiedClick", "InboxFrame_OnClick", true) -- Eat all modified clicks too
+	self:RawHook("InboxFrameItem_OnEnter", true)
 
 	self:RegisterEvent("MAIL_SHOW")
-	self.consoleOptions.args.AutoSend.disabled = not self.db.char.EnableAltClick
-	if self.db.char.MouseWheel then
-		Postal_Express:HookScript(MailFrame, "OnMouseWheel", "InboxMouseScroll")
+	if Postal.db.profile.Express.MouseWheel then
+		Postal_Express:HookScript(MailFrame, "OnMouseWheel")
 	end
 end
 
-function Postal_Express:OnDisable()
-	-- Disabling modules unregisters all events/hook automatically
-end
+-- Disabling modules unregisters all events/hook automatically
+--function Postal_Express:OnDisable()
+--end
 
--- Ctrl-Click and Shift-Clicks Shortcuts for Mail, based on ExpressMail by Tekkub
-function Postal_Express:InboxFrameItem_OnEnter()
+function Postal_Express:InboxFrameItem_OnEnter(this)
+	self.hooks["InboxFrameItem_OnEnter"](this)
 	local tooltip = GameTooltip
-	local this = this
 	
 	local money, COD, _, hasItem, _, wasReturned, _, canReply = select(5, GetInboxHeaderInfo(this.index))
 	if hasItem and hasItem > 1 then
@@ -158,118 +73,53 @@ function Postal_Express:InboxFrameItem_OnEnter()
 end
 
 function Postal_Express:InboxFrame_OnClick(button, index)
-	--[[if IsShiftKeyDown() then
-		mailIndex = index
-		attachIndex = ATTACHMENTS_MAX_RECEIVE
-		invFull = nil
-		lastmailIndex = nil
-		lastattachIndex = nil
-		lastmailmoneyIndex = nil
-		lastItem = GetInboxNumItems()
-		if not self:IsEventRegistered("Postal_Express_Next") then
-			self:RegisterEvent("Postal_Express_Next", "ProcessNext")
+	if IsShiftKeyDown() then
+		local cod = select(6, GetInboxHeaderInfo(index))
+		if cod <= 0 then
+			AutoLootMailItem(index)
 		end
-		if not self:IsEventRegistered("UI_ERROR_MESSAGE") then
-			self:RegisterEvent("UI_ERROR_MESSAGE")
-		end
-		self:ProcessNext()
-	else]]
-	if IsControlKeyDown() then
+		--button:SetChecked(not button:GetChecked())
+	elseif IsControlKeyDown() then
 		local wasReturned, _, canReply = select(10, GetInboxHeaderInfo(index))
 		if not wasReturned and canReply then
 			ReturnInboxItem(index)
 		end
 	else
-		self.hooks["InboxFrame_OnClick"](button, index)
+		return self.hooks["InboxFrame_OnClick"](button, index)
 	end
 end
 
 function Postal_Express:OnTooltipSetItem(tooltip, ...)
 	local recipient = SendMailNameEditBox:GetText()
-	if self.db.char.AutoSend and type(recipient) == "string" and recipient:len() > 0 and SendMailFrame:IsVisible() and not CursorHasItem() then
+	if Postal.db.profile.Express.AutoSend and recipient ~= "" and SendMailFrame:IsVisible() and not CursorHasItem() then
 		tooltip:AddLine(string.format(L["|cffeda55fAlt-Click|r to send this item to %s."], recipient))
 	end
 	return self.hooks[tooltip].OnTooltipSetItem(tooltip, ...)
 end
 
-function Postal_Express:ContainerFrameItemButton_OnModifiedClick(...)
-	if select(2, ...) == "LeftButton" and IsAltKeyDown() and SendMailFrame:IsVisible() and not CursorHasItem() then
+function Postal_Express:ContainerFrameItemButton_OnModifiedClick(this, button, ...)
+	if button == "LeftButton" and IsAltKeyDown() and SendMailFrame:IsVisible() and not CursorHasItem() then
 		local bag, slot = this:GetParent():GetID(), this:GetID()
 		local texture, count = GetContainerItemInfo(bag, slot)
 		PickupContainerItem(bag, slot)
 		ClickSendMailItemButton()
-		if self.db.char.AutoSend then
+		if Postal.db.profile.Express.AutoSend then
 			for i = 1, ATTACHMENTS_MAX_SEND do
 				-- get info about the attachment
-				local itemName, itemTexture, stackCount, quality = GetSendMailItem(i);
+				local itemName, itemTexture, stackCount, quality = GetSendMailItem(i)
 				if SendMailNameEditBox:GetText() ~= "" and texture == itemTexture and count == stackCount then
 					SendMailFrame_SendMail()
 				end
 			end
 		end
 	else
-		self.hooks["ContainerFrameItemButton_OnModifiedClick"](...)
+		return self.hooks["ContainerFrameItemButton_OnModifiedClick"](this, button, ...)
 	end
 end
 
-function Postal_Express:ProcessNext()
-	if lastItem ~= GetInboxNumItems() then
-		-- the last attachment or gold taken auto deleted the mail
-		mailIndex = nil
-		lastItem = nil
-		self:Reset()
-		return
-	end
-	local msgSubject, msgMoney, msgCOD, _, msgItem, _, wasReturned, msgText, canReply, isGM = select(4, GetInboxHeaderInfo(mailIndex))
-	local mailType = self.core:GetMailType(msgSubject)
-	if msgCOD and msgCOD > 0 then
-		-- Don't do anything if its a CoD
-		return self:Reset() -- tail call
-	end
-	while not GetInboxItem(mailIndex, attachIndex) and attachIndex > 0 do
-		-- Find first attachment index backwards
-		attachIndex = attachIndex - 1
-	end
-	if attachIndex > 0 and not invFull then
-		-- If there's attachments, take the item
-		--self.core:Print("Getting Item from Message "..mailIndex..", "..attachIndex)
-		if lastattachIndex ~= attachIndex then -- don't attempt to take more than once or it generates the "database error"
-			TakeInboxItem(mailIndex, attachIndex)
-			lastattachIndex = attachIndex
-		end
-		--attachIndex = attachIndex - 1
-		self:ScheduleEvent("Postal_Express_Next", self.core.db.profile.OpenSpeed)
-	elseif msgMoney > 0 then
-		-- No attachments, but there is money
-		--self.core:Print("Looting Message "..mailIndex)
-		if lastmailmoneyIndex ~= mailIndex then -- don't attempt to take more than once or it generates the "database error"
-			TakeInboxMoney(mailIndex)
-			lastmailmoneyIndex = mailIndex
-		end
-		self:ScheduleEvent("Postal_Express_Next", self.core.db.profile.OpenSpeed)
-	else
-		-- Delete the message, other types of mail are auto-deleted
-		if mailType == "NonAHMail" or mailType == "AHPending" then
-			--self.core:Print("Deleting Message "..mailIndex.."/"..GetInboxNumItems())
-			if not GetInboxItem(mailIndex) then -- Make sure there is no attachment
-				DeleteInboxItem(mailIndex)
-			end
-		end
-		self:Reset()
-	end
-end
-
-function Postal_Express:UI_ERROR_MESSAGE(error_message)
-	if error_message == ERR_INV_FULL then
-		invFull = true
-	elseif error_message == ERR_ITEM_MAX_COUNT then
-		attachIndex = attachIndex - 1
-	end
-end
-
-function Postal_Express:InboxMouseScroll(frame, direction)
+function Postal_Express:OnMouseWheel(frame, direction)
 	if direction == -1 then
-		if math.ceil(GetInboxNumItems()/7) > InboxFrame.pageNum then
+		if math.ceil(GetInboxNumItems() / 7) > InboxFrame.pageNum then
 			InboxNextPage()
 		end
 	elseif InboxFrame.pageNum ~= 1 then
@@ -278,3 +128,73 @@ function Postal_Express:InboxMouseScroll(frame, direction)
 	return self.hooks[frame].OnMouseWheel(frame, direction)
 end
 
+function Postal_Express.SetEnableAltClick(dropdownbutton, arg1, arg2, checked)
+	local self = Postal_Express
+	Postal.db.profile.Express.EnableAltClick = checked
+	if checked then
+		if MailFrame:IsVisible() and not self:IsHooked(GameTooltip, "OnTooltipSetItem") then
+			self:HookScript(GameTooltip, "OnTooltipSetItem")
+			self:RawHook("ContainerFrameItemButton_OnModifiedClick", true)
+		end
+	else
+		if self:IsHooked(GameTooltip, "OnTooltipSetItem") then
+			self:Unhook(GameTooltip, "OnTooltipSetItem")
+			self:Unhook("ContainerFrameItemButton_OnModifiedClick")
+		end
+	end
+	-- A hack to get the next button to disable/enable
+	local i, j = string.match(dropdownbutton:GetName(), "DropDownList(%d+)Button(%d+)")
+	j = tonumber(j) + 1
+	if checked then
+		_G["DropDownList"..i.."Button"..j]:Enable()
+		_G["DropDownList"..i.."Button"..j.."InvisibleButton"]:Hide()
+	else
+		_G["DropDownList"..i.."Button"..j]:Disable()
+		_G["DropDownList"..i.."Button"..j.."InvisibleButton"]:Show()
+	end
+end
+
+function Postal_Express.SetAutoSend(dropdownbutton, arg1, arg2, checked)
+	Postal.db.profile.Express.AutoSend = checked
+end
+
+function Postal_Express.SetMouseWheel(dropdownbutton, arg1, arg2, checked)
+	local self = Postal_Express
+	Postal.db.profile.Express.MouseWheel = checked
+	if checked then
+		if not self:IsHooked(MailFrame, "OnMouseWheel") then
+			self:HookScript(MailFrame, "OnMouseWheel")
+		end
+	else
+		if self:IsHooked(MailFrame, "OnMouseWheel") then
+			self:Unhook(MailFrame, "OnMouseWheel")
+		end
+	end
+end
+
+function Postal_Express.ModuleMenu(self, level)
+	if not level then return end
+	local info = self.info
+	wipe(info)
+	if level == 1 + self.levelAdjust then
+		local db = Postal.db.profile.Express
+		info.keepShownOnClick = 1
+
+		info.text = L["Enable Alt-Click to send mail"]
+		info.func = Postal_Express.SetEnableAltClick
+		info.checked = db.EnableAltClick
+		UIDropDownMenu_AddButton(info, level)
+
+		info.text = L["Auto-Send on Alt-Click"]
+		info.func = Postal_Express.SetAutoSend
+		info.checked = db.AutoSend
+		info.disabled = not Postal.db.profile.Express.EnableAltClick
+		UIDropDownMenu_AddButton(info, level)
+
+		info.text = L["Mousewheel to scroll Inbox"]
+		info.func = Postal_Express.SetMouseWheel
+		info.checked = db.MouseWheel
+		info.disabled = nil
+		UIDropDownMenu_AddButton(info, level)
+	end
+end
