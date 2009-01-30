@@ -12,7 +12,7 @@
 ## Notes-zhCN: Postal: 增强信箱功能
 ## OptionalDeps: Ace3
 ## SavedVariables: Postal3DB
-##
+
 ## LoadManagers: AddonLoader
 ## X-LoadOn-Mailbox: true
 ## X-Email: xinhuan AT gmail DOT com
