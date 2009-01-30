@@ -19,14 +19,12 @@ function Postal_Express:MAIL_SHOW()
 end
 
 function Postal_Express:Reset(event)
-	if event == "MAIL_CLOSED" or event == "PLAYER_LEAVING_WORLD" then
-		if self:IsHooked(GameTooltip, "OnTooltipSetItem") then
-			self:Unhook(GameTooltip, "OnTooltipSetItem")
-			self:Unhook("ContainerFrameItemButton_OnModifiedClick")
-		end
-		self:UnregisterEvent("MAIL_CLOSED")
-		self:UnregisterEvent("PLAYER_LEAVING_WORLD")
+	if self:IsHooked(GameTooltip, "OnTooltipSetItem") then
+		self:Unhook(GameTooltip, "OnTooltipSetItem")
+		self:Unhook("ContainerFrameItemButton_OnModifiedClick")
 	end
+	self:UnregisterEvent("MAIL_CLOSED")
+	self:UnregisterEvent("PLAYER_LEAVING_WORLD")
 end
 	
 function Postal_Express:OnEnable()
@@ -94,7 +92,6 @@ function Postal_Express:OnTooltipSetItem(tooltip, ...)
 	if Postal.db.profile.Express.AutoSend and recipient ~= "" and SendMailFrame:IsVisible() and not CursorHasItem() then
 		tooltip:AddLine(string.format(L["|cffeda55fAlt-Click|r to send this item to %s."], recipient))
 	end
-	return self.hooks[tooltip].OnTooltipSetItem(tooltip, ...)
 end
 
 function Postal_Express:ContainerFrameItemButton_OnModifiedClick(this, button, ...)
@@ -125,7 +122,6 @@ function Postal_Express:OnMouseWheel(frame, direction)
 	elseif InboxFrame.pageNum ~= 1 then
 		InboxPrevPage()
 	end
-	return self.hooks[frame].OnMouseWheel(frame, direction)
 end
 
 function Postal_Express.SetEnableAltClick(dropdownbutton, arg1, arg2, checked)
