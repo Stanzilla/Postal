@@ -37,6 +37,7 @@ local defaults = {
 		},
 	},
 }
+local _G = getfenv(0)
 local t = {}
 local aboutFrame
 
