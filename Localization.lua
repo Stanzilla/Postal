@@ -12,7 +12,7 @@ debug = true
 local L = AL3:NewLocale("Postal", "enUS", true, debug)
 if L then
 --@localization(locale="enUS", format="lua_additive_table", same-key-is-true=true, table-name="L")@
-return
+if GetLocale() == "enUS" or GetLocale() == "enGB" then return end
 end
 
 local L = AL3:NewLocale("Postal", "deDE")
