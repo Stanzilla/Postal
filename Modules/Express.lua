@@ -2,10 +2,10 @@
 local Postal_Express = Postal:NewModule("Express", "AceEvent-3.0", "AceHook-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("Postal")
 Postal_Express.description = L["Mouse click short cuts for mail."]
-Postal_Express.description2 = L["|cFFFFCC00*|r Shift-Click to take item/money from mail.\
-|cFFFFCC00*|r Ctrl-Click to return mail.\
-|cFFFFCC00*|r Alt-Click to move an item from your inventory to the current outgoing mail (same as right click in default UI).\
-|cFFFFCC00*|r Mousewheel to scroll the inbox."]
+Postal_Express.description2 = L[ [[|cFFFFCC00*|r Shift-Click to take item/money from mail.
+|cFFFFCC00*|r Ctrl-Click to return mail.
+|cFFFFCC00*|r Alt-Click to move an item from your inventory to the current outgoing mail (same as right click in default UI).
+|cFFFFCC00*|r Mousewheel to scroll the inbox.]] ]
 
 local _G = getfenv(0)
 

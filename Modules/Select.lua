@@ -2,12 +2,12 @@
 local Postal_Select = Postal:NewModule("Select", "AceEvent-3.0", "AceHook-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("Postal")
 Postal_Select.description = L["Add check boxes to the inbox for multiple mail operations."]
-Postal_Select.description2 = L["|cFFFFCC00*|r Selected mail will be batch opened or returned to sender by clicking Open or Return.\
-|cFFFFCC00*|r You can Shift-Click 2 checkboxes to mass select every mail between the 2 checkboxes.\
-|cFFFFCC00*|r You can Ctrl-Click a checkbox to mass select or unselect every mail from that sender.\
-|cFFFFCC00*|r Select will never delete any mail (mail without text is auto-deleted by the game when all attached items and gold are taken).\
-|cFFFFCC00*|r Select will skip CoD mails and mails from Blizzard.\
-|cFFFFCC00*|r Disable the Verbose option to stop the chat spam while opening mail."]
+Postal_Select.description2 = L[ [[|cFFFFCC00*|r Selected mail will be batch opened or returned to sender by clicking Open or Return.
+|cFFFFCC00*|r You can Shift-Click 2 checkboxes to mass select every mail between the 2 checkboxes.
+|cFFFFCC00*|r You can Ctrl-Click a checkbox to mass select or unselect every mail from that sender.
+|cFFFFCC00*|r Select will never delete any mail (mail without text is auto-deleted by the game when all attached items and gold are taken).
+|cFFFFCC00*|r Select will skip CoD mails and mails from Blizzard.
+|cFFFFCC00*|r Disable the Verbose option to stop the chat spam while opening mail.]] ]
 
 local _G = getfenv(0)
 local currentMode = nil
