@@ -2,11 +2,11 @@
 local Postal_OpenAll = Postal:NewModule("OpenAll", "AceEvent-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("Postal")
 Postal_OpenAll.description = L["A button that collects all attachments and coins from mail."]
-Postal_OpenAll.description2 = L["|cFFFFCC00*|r Simple filters are available for various mail types.\
-|cFFFFCC00*|r Shift-Click the Open All button to override the filters and take ALL mail.\
-|cFFFFCC00*|r OpenAll will never delete any mail (mail without text is auto-deleted by the game when all attached items and gold are taken).\
-|cFFFFCC00*|r OpenAll will skip CoD mails and mails from Blizzard.\
-|cFFFFCC00*|r Disable the Verbose option to stop the chat spam while opening mail."]
+Postal_OpenAll.description2 = L[ [[|cFFFFCC00*|r Simple filters are available for various mail types.
+|cFFFFCC00*|r Shift-Click the Open All button to override the filters and take ALL mail.
+|cFFFFCC00*|r OpenAll will never delete any mail (mail without text is auto-deleted by the game when all attached items and gold are taken).
+|cFFFFCC00*|r OpenAll will skip CoD mails and mails from Blizzard.
+|cFFFFCC00*|r Disable the Verbose option to stop the chat spam while opening mail.]] ]
 
 local mailIndex, attachIndex
 local lastmailIndex, lastattachIndex, lastmailmoneyIndex

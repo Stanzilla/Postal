@@ -2,8 +2,8 @@
 local Postal_BlackBook = Postal:NewModule("BlackBook", "AceEvent-3.0", "AceHook-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("Postal")
 Postal_BlackBook.description = L["Adds a contact list next to the To: field."]
-Postal_BlackBook.description2 = L["|cFFFFCC00*|r This module will list your contacts, friends, guild mates, alts and track the last 10 people you mailed.\
-|cFFFFCC00*|r It will also autocomplete all names in your BlackBook."]
+Postal_BlackBook.description2 = L[ [[|cFFFFCC00*|r This module will list your contacts, friends, guild mates, alts and track the last 10 people you mailed.
+|cFFFFCC00*|r It will also autocomplete all names in your BlackBook.]] ]
 
 local Postal_BlackBookButton
 local sorttable = {}
