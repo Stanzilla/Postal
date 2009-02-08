@@ -27,6 +27,7 @@ local defaults = {
 			MouseWheel = true,
 		},
 		BlackBook = {
+			AutoFill = true,
 			contacts = {},
 			recent = {},
 		},

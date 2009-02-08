@@ -122,8 +122,10 @@ function Postal_BlackBook:SendMailFrame_Reset()
 		tremove(db, k)
 	end
 	self.hooks["SendMailFrame_Reset"]()
-	SendMailNameEditBox:SetText(name)
-	SendMailNameEditBox:HighlightText()
+	if Postal.db.profile.BlackBook.AutoFill then
+		SendMailNameEditBox:SetText(name)
+		SendMailNameEditBox:HighlightText()
+	end
 end
 
 function Postal_BlackBook.ClearRecent(dropdownbutton, arg1, arg2, checked)
@@ -133,7 +135,7 @@ end
 
 function Postal_BlackBook:MailFrameTab_OnClick(button, tab)
 	self.hooks["MailFrameTab_OnClick"](button, tab)
-	if tab == 2 then
+	if Postal.db.profile.BlackBook.AutoFill and tab == 2 then
 		local name = Postal.db.profile.BlackBook.recent[1]
 		if name and SendMailNameEditBox:GetText() == "" then
 			SendMailNameEditBox:SetText(name)
@@ -451,3 +453,23 @@ function Postal_BlackBook.BlackBookMenu(self, level)
 
 	end
 end
+
+function Postal_BlackBook.SaveOption(dropdownbutton, arg1, arg2, checked)
+	Postal.db.profile[arg1][arg2] = checked
+end
+
+function Postal_BlackBook.ModuleMenu(self, level)
+	if not level then return end
+	local info = self.info
+	wipe(info)
+	if level == 1 + self.levelAdjust then
+		info.keepShownOnClick = 1
+		info.text = L["Autofill last person mailed"]
+		info.func = Postal_BlackBook.SaveOption
+		info.arg1 = "BlackBook"
+		info.arg2 = "AutoFill"
+		info.checked = Postal.db.profile.BlackBook.AutoFill
+		UIDropDownMenu_AddButton(info, level)
+	end
+end
+
