@@ -454,10 +454,6 @@ function Postal_BlackBook.BlackBookMenu(self, level)
 	end
 end
 
-function Postal_BlackBook.SaveOption(dropdownbutton, arg1, arg2, checked)
-	Postal.db.profile[arg1][arg2] = checked
-end
-
 function Postal_BlackBook.ModuleMenu(self, level)
 	if not level then return end
 	local info = self.info
@@ -465,7 +461,7 @@ function Postal_BlackBook.ModuleMenu(self, level)
 	if level == 1 + self.levelAdjust then
 		info.keepShownOnClick = 1
 		info.text = L["Autofill last person mailed"]
-		info.func = Postal_BlackBook.SaveOption
+		info.func = Postal.SaveOption
 		info.arg1 = "BlackBook"
 		info.arg2 = "AutoFill"
 		info.checked = Postal.db.profile.BlackBook.AutoFill

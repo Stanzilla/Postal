@@ -331,10 +331,6 @@ function Postal_Select:UI_ERROR_MESSAGE(event, error_message)
 	end
 end
 
-function Postal_Select.SaveOption(dropdownbutton, arg1, arg2, checked)
-	Postal.db.profile[arg1][arg2] = checked
-end
-
 function Postal_Select.ModuleMenu(self, level)
 	if not level then return end
 	local info = self.info
@@ -342,7 +338,7 @@ function Postal_Select.ModuleMenu(self, level)
 	if level == 1 + self.levelAdjust then
 		info.keepShownOnClick = 1
 		info.text = L["Verbose mode"]
-		info.func = Postal_Select.SaveOption
+		info.func = Postal.SaveOption
 		info.arg1 = "Select"
 		info.arg2 = "SpamChat"
 		info.checked = Postal.db.profile.Select.SpamChat

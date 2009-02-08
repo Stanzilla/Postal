@@ -222,10 +222,6 @@ function Postal_OpenAll:UI_ERROR_MESSAGE(event, error_message)
 	end
 end
 
-function Postal_OpenAll.SaveOption(dropdownbutton, arg1, arg2, checked)
-	Postal.db.profile[arg1][arg2] = checked
-end
-
 function Postal_OpenAll.ModuleMenu(self, level)
 	if not level then return end
 	local info = self.info
@@ -252,7 +248,7 @@ function Postal_OpenAll.ModuleMenu(self, level)
 		local db = Postal.db.profile.OpenAll
 
 		info.keepShownOnClick = 1
-		info.func = Postal_OpenAll.SaveOption
+		info.func = Postal.SaveOption
 		info.arg1 = "OpenAll"
 
 		if UIDROPDOWNMENU_MENU_VALUE == "AHMail" then
