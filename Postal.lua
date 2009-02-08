@@ -25,6 +25,7 @@ local defaults = {
 			EnableAltClick = true,
 			AutoSend = true,
 			MouseWheel = true,
+			MultiItemTooltip = true,
 		},
 		BlackBook = {
 			AutoFill = true,
@@ -120,6 +121,10 @@ function Postal:Print(...)
 		text = text.." "..tostring(select(i, ...))
 	end
 	print(text)
+end
+
+function Postal.SaveOption(dropdownbutton, arg1, arg2, checked)
+	Postal.db.profile[arg1][arg2] = checked
 end
 
 function Postal.ToggleModule(dropdownbutton, arg1, arg2, checked)

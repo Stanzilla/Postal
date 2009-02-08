@@ -47,7 +47,7 @@ function Postal_Express:InboxFrameItem_OnEnter(this)
 	local tooltip = GameTooltip
 	
 	local money, COD, _, hasItem, _, wasReturned, _, canReply = select(5, GetInboxHeaderInfo(this.index))
-	if hasItem and hasItem > 1 then
+	if Postal.db.profile.Express.MultiItemTooltip and hasItem and hasItem > 1 then
 		for i = 1, ATTACHMENTS_MAX_RECEIVE do
 			local name, itemTexture, count, quality, canUse = GetInboxItem(this.index, i);
 			if name then
@@ -190,6 +190,14 @@ function Postal_Express.ModuleMenu(self, level)
 		info.text = L["Mousewheel to scroll Inbox"]
 		info.func = Postal_Express.SetMouseWheel
 		info.checked = db.MouseWheel
+		info.disabled = nil
+		UIDropDownMenu_AddButton(info, level)
+
+		info.text = L["Add multiple item mail tooltips"]
+		info.func = Postal.SaveOption
+		info.checked = db.MultiItemTooltip
+		info.arg1 = "Express"
+		info.arg2 = "MultiItemTooltip"
 		info.disabled = nil
 		UIDropDownMenu_AddButton(info, level)
 	end
