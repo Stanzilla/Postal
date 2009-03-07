@@ -42,8 +42,8 @@ end
 --function Postal_Express:OnDisable()
 --end
 
-function Postal_Express:InboxFrameItem_OnEnter(this)
-	self.hooks["InboxFrameItem_OnEnter"](this)
+function Postal_Express:InboxFrameItem_OnEnter(this, motion)
+	self.hooks["InboxFrameItem_OnEnter"](this, motion)
 	local tooltip = GameTooltip
 	
 	local money, COD, _, hasItem, _, wasReturned, _, canReply = select(5, GetInboxHeaderInfo(this.index))
@@ -61,7 +61,7 @@ function Postal_Express:InboxFrameItem_OnEnter(this)
 			end
 		end
 	end
-	if (money > 0 or hasItem) and (0 == (COD or 0)) then
+	if (money > 0 or hasItem) and (not COD or COD == 0) then
 		tooltip:AddLine(L["|cffeda55fShift-Click|r to take the contents."])
 	end
 	if not wasReturned and canReply then
