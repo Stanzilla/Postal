@@ -146,7 +146,7 @@ end
 
 -- Hook player name autocomplete to look in our dbs first
 local autocompleteScan = {"recent", "contacts"}
-function Postal_BlackBook:PlayerNameAutocomplete(editbox)
+function Postal_BlackBook:PlayerNameAutocomplete(editbox, ...)
 	if editbox == SendMailNameEditBox then
 		local text = strupper(editbox:GetText())
 		local textlen = strlen(text)
@@ -190,7 +190,7 @@ function Postal_BlackBook:PlayerNameAutocomplete(editbox)
 			end
 		end
 	end
-	return self.hooks["PlayerNameAutocomplete"](editbox)
+	return self.hooks["PlayerNameAutocomplete"](editbox, ...)
 end
 
 function Postal_BlackBook.SetSendMailName(dropdownbutton, arg1, arg2, checked)
