@@ -34,6 +34,7 @@ function Postal_Express:OnEnable()
 
 	self:RegisterEvent("MAIL_SHOW")
 	if Postal.db.profile.Express.MouseWheel then
+		MailFrame:EnableMouseWheel(true)
 		Postal_Express:HookScript(MailFrame, "OnMouseWheel")
 	end
 end
@@ -159,6 +160,7 @@ function Postal_Express.SetMouseWheel(dropdownbutton, arg1, arg2, checked)
 	Postal.db.profile.Express.MouseWheel = checked
 	if checked then
 		if not self:IsHooked(MailFrame, "OnMouseWheel") then
+			MailFrame:EnableMouseWheel(true)
 			self:HookScript(MailFrame, "OnMouseWheel")
 		end
 	else
