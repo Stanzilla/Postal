@@ -39,6 +39,7 @@ function Postal_BlackBook:OnEnable()
 	self:RawHook("SendMailFrame_Reset", true)
 	self:RawHook("MailFrameTab_OnClick", true)
 	self:RawHook("PlayerNameAutocomplete", true)
+	self:RawHookScript(SendMailNameEditBox, "OnCharComposition")
 	self:RegisterEvent("MAIL_SHOW")
 
 	-- For enabling after a disable
@@ -146,7 +147,19 @@ end
 
 -- Hook player name autocomplete to look in our dbs first
 local autocompleteScan = {"recent", "contacts"}
-function Postal_BlackBook:PlayerNameAutocomplete(editbox, ...)
+function Postal_BlackBook:PlayerNameAutocomplete(...)
+	if not self:PlayerNameAutocompleteReal(...) then
+		return self.hooks["PlayerNameAutocomplete"](...)
+	end
+end
+
+function Postal_BlackBook:OnCharComposition(...)
+	if not self:PlayerNameAutocompleteReal(...) then
+		return self.hooks[SendMailNameEditBox].OnCharComposition(...)
+	end
+end
+
+function Postal_BlackBook:PlayerNameAutocompleteReal(editbox, char, skipFriends, skipGuild, ...)
 	if editbox == SendMailNameEditBox then
 		local text = strupper(editbox:GetText())
 		local textlen = strlen(text)
@@ -162,12 +175,11 @@ function Postal_BlackBook:PlayerNameAutocomplete(editbox, ...)
 				if strfind(strupper(p), text, 1, 1) == 1 then
 					editbox:SetText(p)
 					if editbox:IsInIMECompositionMode() then
-						-- Yes default UI code uses arg1 global too... (UIParent.lua:2947)
-						editbox:HighlightText(textlen - strlen(arg1), -1)
+						editbox:HighlightText(textlen - strlen(char), -1)
 					else
 						editbox:HighlightText(textlen, -1)
 					end
-					return
+					return true
 				end
 			end
 		end
@@ -180,17 +192,15 @@ function Postal_BlackBook:PlayerNameAutocomplete(editbox, ...)
 				if strfind(strupper(name), text, 1, 1) == 1 then
 					editbox:SetText(name)
 					if editbox:IsInIMECompositionMode() then
-						-- Yes default UI code uses arg1 global too... (UIParent.lua:2947)
-						editbox:HighlightText(textlen - strlen(arg1), -1)
+						editbox:HighlightText(textlen - strlen(char), -1)
 					else
 						editbox:HighlightText(textlen, -1)
 					end
-					return
+					return true
 				end
 			end
 		end
 	end
-	return self.hooks["PlayerNameAutocomplete"](editbox, ...)
 end
 
 function Postal_BlackBook.SetSendMailName(dropdownbutton, arg1, arg2, checked)
