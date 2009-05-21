@@ -8,7 +8,7 @@ local defaults = {
 		ModuleEnabledState = {
 			["*"] = true
 		},
-		OpenSpeed = 0.75,
+		OpenSpeed = 0.50,
 		Select = {
 			SpamChat = true,
 		},
@@ -249,8 +249,16 @@ function Postal.Menu(self, level)
 	elseif level == 2 then
 		if UIDROPDOWNMENU_MENU_VALUE == "OpenSpeed" then
 			local speed = Postal.db.profile.OpenSpeed
-			for i = 0, 30 do -- apparently Lua doesn't like messing with floats with "for i = 0.5, 2, 0.05 do"
-				local s = i/20 + 0.5
+			for i = 0, 13 do
+				local s = 0.3 + i*0.05
+				info.text = format("%0.2f", s)
+				info.func = Postal.SetOpenSpeed
+				info.checked = s == speed
+				info.arg1 = s
+				UIDropDownMenu_AddButton(info, level)
+			end
+			for i = 0, 8 do
+				local s = 1 + i*0.5
 				info.text = format("%0.2f", s)
 				info.func = Postal.SetOpenSpeed
 				info.checked = s == speed
