@@ -71,12 +71,16 @@ function Postal:OnInitialize()
 	self.db.RegisterCallback(self, "OnProfileCopied", "OnProfileChanged")
 	self.db.RegisterCallback(self, "OnProfileReset", "OnProfileChanged")
 
+	-- Enable/disable modules based on saved settings
 	for name, module in self:IterateModules() do 
 		module:SetEnabledState(self.db.profile.ModuleEnabledState[name] or false)
 		if module.OnEnable then
 			hooksecurefunc(module, "OnEnable", self.OnModuleEnable_Common) -- Posthook
 		end
 	end
+
+	-- Register events
+	self:RegisterEvent("MAIL_CLOSED")
 
 	-- Create the Menu Button
 	local Postal_ModuleMenuButton = CreateFrame("Button", "Postal_ModuleMenuButton", MailFrame)
@@ -113,6 +117,15 @@ function Postal:OnModuleEnable_Common()
 	if self.MAIL_SHOW and MailFrame:IsVisible() then
 		self:MAIL_SHOW()
 	end
+end
+
+-- Hides the minimap unread mail button if there are no unread mail on closing the mailbox.
+-- Does not scan past the first 50 items since only the first 50 are viewable.
+function Postal:MAIL_CLOSED()
+	for i = 1, GetInboxNumItems() do
+		if not select(9, GetInboxHeaderInfo(i)) then return end
+	end
+	MiniMapMailFrame:Hide()
 end
 
 function Postal:Print(...)
