@@ -103,9 +103,9 @@ function Postal_OpenAll:OpenAll()
 end
 
 function Postal_OpenAll:ProcessNext()
-	local _, msgSubject, msgMoney, msgCOD, msgItem, msgText, isGM
+	local _, sender, msgSubject, msgMoney, msgCOD, msgItem, msgText, isGM
 	if mailIndex > 0 then
-		msgSubject, msgMoney, msgCOD, _, msgItem, _, _, msgText, _, isGM = select(4, GetInboxHeaderInfo(mailIndex))
+		sender, msgSubject, msgMoney, msgCOD, _, msgItem, _, _, msgText, _, isGM = select(3, GetInboxHeaderInfo(mailIndex))
 		if (msgCOD and msgCOD > 0) or (isGM) then
 			-- Skip mail if it contains a CoD or if its from a GM
 			skipFlag = true
@@ -124,6 +124,11 @@ function Postal_OpenAll:ProcessNext()
 				return self:ProcessNext() -- tail call
 			end
 		else
+			-- AH mail, check if its from faction or neutral AH
+			local factionEnglish, factionLocale = UnitFactionGroup("player")
+			if not strfind(sender, factionLocale) then
+				mailType = "Neutral"..mailType
+			end
 			-- Skip AH mail types according to user options
 			if not (openAllOverride or Postal.db.profile.OpenAll[mailType]) then
 				mailIndex = mailIndex - 1
@@ -232,8 +237,12 @@ function Postal_OpenAll.ModuleMenu(self, level)
 		info.func = self.UncheckHack
 		info.notCheckable = 1
 
-		info.text = L["AH-related mail"]
+		info.text = FACTION.." "..L["AH-related mail"]
 		info.value = "AHMail"
+		UIDropDownMenu_AddButton(info, level)
+
+		info.text = FACTION_STANDING_LABEL4.." "..L["AH-related mail"]
+		info.value = "NeutralAHMail"
 		UIDropDownMenu_AddButton(info, level)
 
 		info.text = L["Non-AH related mail"]
@@ -275,6 +284,32 @@ function Postal_OpenAll.ModuleMenu(self, level)
 			info.text = L["Open all Auction won mail"]
 			info.arg2 = "AHWon"
 			info.checked = db.AHWon
+			UIDropDownMenu_AddButton(info, level)
+
+		elseif UIDROPDOWNMENU_MENU_VALUE == "NeutralAHMail" then
+			info.text = L["Open all Auction cancelled mail"]
+			info.arg2 = "NeutralAHCancelled"
+			info.checked = db.NeutralAHCancelled
+			UIDropDownMenu_AddButton(info, level)
+
+			info.text = L["Open all Auction expired mail"]
+			info.arg2 = "NeutralAHExpired"
+			info.checked = db.NeutralAHExpired
+			UIDropDownMenu_AddButton(info, level)
+
+			info.text = L["Open all Outbid on mail"]
+			info.arg2 = "NeutralAHOutbid"
+			info.checked = db.NeutralAHOutbid
+			UIDropDownMenu_AddButton(info, level)
+
+			info.text = L["Open all Auction successful mail"]
+			info.arg2 = "NeutralAHSuccess"
+			info.checked = db.NeutralAHSuccess
+			UIDropDownMenu_AddButton(info, level)
+
+			info.text = L["Open all Auction won mail"]
+			info.arg2 = "NeutralAHWon"
+			info.checked = db.NeutralAHWon
 			UIDropDownMenu_AddButton(info, level)
 
 		elseif UIDROPDOWNMENU_MENU_VALUE == "NonAHMail" then
