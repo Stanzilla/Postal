@@ -202,7 +202,6 @@ end
 
 function Postal_OpenAll:Reset(event)
 	updateFrame:Hide()
-	self:UnregisterEvent("MAIL_INBOX_UPDATE")
 	self:UnregisterEvent("UI_ERROR_MESSAGE")
 	button:SetText(L["Open All"])
 	Postal:DisableInbox()
@@ -215,7 +214,6 @@ end
 
 function Postal_OpenAll:MAIL_INBOX_UPDATE()
 	--Postal:Print("update")
-	self:UnregisterEvent("MAIL_INBOX_UPDATE")
 	updateFrame:Show()
 end
 
