@@ -212,11 +212,6 @@ function Postal_OpenAll:Reset(event)
 	end
 end
 
-function Postal_OpenAll:MAIL_INBOX_UPDATE()
-	--Postal:Print("update")
-	updateFrame:Show()
-end
-
 function Postal_OpenAll:UI_ERROR_MESSAGE(event, error_message)
 	if error_message == ERR_INV_FULL then
 		invFull = true
