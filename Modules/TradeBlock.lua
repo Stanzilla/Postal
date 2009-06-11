@@ -10,6 +10,7 @@ end
 function Postal_TradeBlock:OnDisable()
 	-- Disabling modules unregisters all events/hook automatically
 	SetCVar("BlockTrades", 0)
+	ClosePetition()
 	PetitionFrame:RegisterEvent("PETITION_SHOW")
 end
 
@@ -27,5 +28,6 @@ function Postal_TradeBlock:Reset()
 	self:UnregisterEvent("MAIL_CLOSED")
 	self:UnregisterEvent("PLAYER_LEAVING_WORLD")
 	SetCVar("BlockTrades", 0)
+	ClosePetition()
 	PetitionFrame:RegisterEvent("PETITION_SHOW")
 end
