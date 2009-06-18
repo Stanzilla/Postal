@@ -45,11 +45,8 @@ function Postal_DoNotWant.Click(self, button, down)
 	selectedIDmoney = money
 	local firstAttachName
 	for i = 1, ATTACHMENTS_MAX_RECEIVE do
-		local name, itemTexture, count, quality, canUse = GetInboxItem(selectedID, i)
-		if name then
-			firstAttachName = name
-			break
-		end
+		firstAttachName = GetInboxItem(selectedID, i)
+		if firstAttachName then break end
 	end
 	if InboxItemCanDelete(selectedID) then
 		if firstAttachName then
