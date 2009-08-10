@@ -151,8 +151,12 @@ end
 local autocompleteScan = {"recent", "contacts"}
 function Postal_BlackBook:OnTextChanged(editbox, userInput, ...)
 	if userInput then
+		local db = Postal.db.profile.BlackBook
+
 		-- Call Blizzard's function first for its own autocomplete popup
-		self.hooks[SendMailNameEditBox].OnTextChanged(editbox, userInput, ...)
+		if not db.DisableBlizzardAutoComplete then
+			self.hooks[SendMailNameEditBox].OnTextChanged(editbox, userInput, ...)
+		end
 
 		local text = strupper(editbox:GetText())
 		local textlen = strlen(text)
@@ -164,26 +168,41 @@ function Postal_BlackBook:OnTextChanged(editbox, userInput, ...)
 		previousEditBoxNameLen = textlen
 
 		-- Check alt list
-		local db = Postal.db.global.BlackBook.alts
-		local realm = GetRealmName()
-		local faction = UnitFactionGroup("player")
-		local player = UnitName("player")
-		for i = 1, #db do
-			local p, r, f = strsplit("|", db[i])
-			if r == realm and f == faction and p ~= player then
-				if strfind(strupper(p), text, 1, 1) == 1 then
-					editbox:SetText(p)
+		if db.AutoCompleteAlts then
+			local db = Postal.db.global.BlackBook.alts
+			local realm = GetRealmName()
+			local faction = UnitFactionGroup("player")
+			local player = UnitName("player")
+			for i = 1, #db do
+				local p, r, f = strsplit("|", db[i])
+				if r == realm and f == faction and p ~= player then
+					if strfind(strupper(p), text, 1, 1) == 1 then
+						editbox:SetText(p)
+						editbox:HighlightText(textlen, -1)
+						return
+					end
+				end
+			end
+		end
+
+		-- Check recent list
+		if db.AutoCompleteRecent then
+			local db2 = db.recent
+			for j = 1, #db2 do
+				local name = db2[j]
+				if strfind(strupper(name), text, 1, 1) == 1 then
+					editbox:SetText(name)
 					editbox:HighlightText(textlen, -1)
 					return
 				end
 			end
 		end
 
-		-- Check recent and contacts list
-		for i = 1, #autocompleteScan do
-			local db = Postal.db.profile.BlackBook[autocompleteScan[i]]
-			for j = 1, #db do
-				local name = db[j]
+		-- Check contacts list
+		if db.AutoCompleteContacts then
+			local db2 = db.contacts
+			for j = 1, #db2 do
+				local name = db2[j]
 				if strfind(strupper(name), text, 1, 1) == 1 then
 					editbox:SetText(name)
 					editbox:HighlightText(textlen, -1)
@@ -193,24 +212,28 @@ function Postal_BlackBook:OnTextChanged(editbox, userInput, ...)
 		end
 
 		-- Check friends list
-		local numFriends = GetNumFriends()
-		for i = 1, numFriends do
-			local name = GetFriendInfo(i)
-			if name and strfind(strupper(name), text, 1, 1) == 1 then
-				editbox:SetText(name)
-				editbox:HighlightText(textlen, -1)
-				return
+		if db.AutoCompleteFriends then
+			local numFriends = GetNumFriends()
+			for i = 1, numFriends do
+				local name = GetFriendInfo(i)
+				if name and strfind(strupper(name), text, 1, 1) == 1 then
+					editbox:SetText(name)
+					editbox:HighlightText(textlen, -1)
+					return
+				end
 			end
 		end
 
 		-- Check guild list
-		numFriends = GetNumGuildMembers(true)
-		for i = 1, numFriends do
-			local name = GetGuildRosterInfo(i)
-			if name and strfind(strupper(name), text, 1, 1) == 1 then
-				editbox:SetText(name)
-				editbox:HighlightText(textlen, -1)
-				return
+		if db.AutoCompleteGuild then
+			numFriends = GetNumGuildMembers(true)
+			for i = 1, numFriends do
+				local name = GetGuildRosterInfo(i)
+				if name and strfind(strupper(name), text, 1, 1) == 1 then
+					editbox:SetText(name)
+					editbox:HighlightText(textlen, -1)
+					return
+				end
 			end
 		end
 	end
@@ -490,6 +513,55 @@ function Postal_BlackBook.ModuleMenu(self, level)
 		info.arg2 = "AutoFill"
 		info.checked = Postal.db.profile.BlackBook.AutoFill
 		UIDropDownMenu_AddButton(info, level)
+
+		info.hasArrow = 1
+		info.keepShownOnClick = 1
+		info.func = self.UncheckHack
+		info.checked = nil
+		info.arg1 = nil
+		info.arg2 = nil
+		info.text = L["Name auto-completion options"]
+		info.value = "AutoComplete"
+		UIDropDownMenu_AddButton(info, level)
+
+	elseif level == 2 + self.levelAdjust then
+		local db = Postal.db.profile.BlackBook
+
+		info.keepShownOnClick = 1
+		info.func = Postal.SaveOption
+		info.arg1 = "BlackBook"
+
+		if UIDROPDOWNMENU_MENU_VALUE == "AutoComplete" then
+			info.text = L["Alts"]
+			info.arg2 = "AutoCompleteAlts"
+			info.checked = db.AutoCompleteAlts
+			UIDropDownMenu_AddButton(info, level)
+
+			info.text = L["Recently Mailed"]
+			info.arg2 = "AutoCompleteRecent"
+			info.checked = db.AutoCompleteRecent
+			UIDropDownMenu_AddButton(info, level)
+
+			info.text = L["Contacts"]
+			info.arg2 = "AutoCompleteContacts"
+			info.checked = db.AutoCompleteContacts
+			UIDropDownMenu_AddButton(info, level)
+
+			info.text = L["Friends"]
+			info.arg2 = "AutoCompleteFriends"
+			info.checked = db.AutoCompleteFriends
+			UIDropDownMenu_AddButton(info, level)
+
+			info.text = L["Guild"]
+			info.arg2 = "AutoCompleteGuild"
+			info.checked = db.AutoCompleteGuild
+			UIDropDownMenu_AddButton(info, level)
+
+			info.text = L["Disable Blizzard's auto-completion popup menu"]
+			info.arg2 = "DisableBlizzardAutoComplete"
+			info.checked = db.DisableBlizzardAutoComplete
+			UIDropDownMenu_AddButton(info, level)
+		end
 	end
 end
 

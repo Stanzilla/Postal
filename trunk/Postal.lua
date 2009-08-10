@@ -36,6 +36,12 @@ local defaults = {
 			AutoFill = true,
 			contacts = {},
 			recent = {},
+			AutoCompleteAlts = true,
+			AutoCompleteRecent = true,
+			AutoCompleteContacts = true,
+			AutoCompleteFriends = true,
+			AutoCompleteGuild = true,
+			DisableBlizzardAutoComplete = false,
 		},
 	},
 	global = {
