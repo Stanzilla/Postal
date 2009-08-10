@@ -62,6 +62,20 @@ Postal_DropDownMenu.HideMenu = function()
 	end
 end
 
+-- Functions for long subject mouseover
+local function subjectHoverIn(self)
+	local s = _G["MailItem"..self:GetID().."Subject"]
+	if s:GetStringWidth() + 25 > s:GetWidth() then
+		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		GameTooltip:SetText(s:GetText())
+		GameTooltip:Show()
+	end
+end
+local function subjectHoverOut(self)
+	GameTooltip:Hide()
+end
+
+
 ---------------------------
 -- Postal Core Functions --
 ---------------------------
@@ -104,6 +118,17 @@ function Postal:OnInitialize()
 		ToggleDropDownMenu(1, nil, Postal_DropDownMenu, self:GetName(), 0, 0)
 	end)
 	Postal_ModuleMenuButton:SetScript("OnHide", Postal_DropDownMenu.HideMenu)
+
+	-- Create 7 buttons for mouseover on long subject lines
+	for i = 1, 7 do
+		local b = CreateFrame("Button", "PostalSubjectHover"..i, _G["MailItem"..i])
+		b:SetID(i)
+		b:SetAllPoints(_G["MailItem"..i.."Subject"])
+		b:SetScript("OnEnter", subjectHoverIn)
+		b:SetScript("OnLeave", subjectHoverOut)
+	end
+
+	self.OnInitialize = nil
 end
 
 function Postal:OnProfileChanged(event, database, newProfileKey)
