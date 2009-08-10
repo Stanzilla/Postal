@@ -34,6 +34,13 @@ updateFrame:SetScript("OnUpdate", function(self, elapsed)
 	end
 end)
 
+local function noop() end
+local function printTooMuchMail()
+	-- Just print once
+	Postal:Print((gsub(INBOX_TOO_MUCH_MAIL, "|n", " ")))
+	InboxTooMuchMail.Show = noop
+end
+
 function Postal_Select:OnEnable()
 	--create the open button
 	if not openButton then
@@ -82,6 +89,11 @@ function Postal_Select:OnEnable()
 	self:RawHook("InboxFrame_Update", true)
 	self:RegisterEvent("MAIL_SHOW")
 
+	-- Don't show that silly "Not all of your mail could be delivered. Please delete some
+	-- mail to make room." message under our Open and Return buttons. Print it to chat instead.
+	InboxTooMuchMail.Show = printTooMuchMail
+	InboxTooMuchMail:Hide()
+
 	-- For enabling after a disable
 	openButton:Show()
 	returnButton:Show()
@@ -103,6 +115,7 @@ function Postal_Select:OnDisable()
 		_G["MailItem"..i.."ExpireTime"]:SetPoint("TOPRIGHT", "MailItem"..i, "TOPRIGHT", -4, -4)
 		_G["MailItem"..i]:SetWidth(305)
 	end
+	InboxTooMuchMail.Show = nil
 end
 
 function Postal_Select:MAIL_SHOW()
@@ -321,6 +334,7 @@ function Postal_Select:Reset(event)
 		self:UnregisterEvent("MAIL_CLOSED")
 		self:UnregisterEvent("PLAYER_LEAVING_WORLD")
 	end
+	InboxTooMuchMail.Show = printTooMuchMail
 end
 
 function Postal_Select:UI_ERROR_MESSAGE(event, error_message)
