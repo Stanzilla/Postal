@@ -13,6 +13,7 @@ local ignoresortlocale = {
 	["zhTW"] = true,
 }
 local enableAltsMenu
+local previousEditBoxNameLen = 0
 
 function Postal_BlackBook:OnEnable()
 	if not Postal_BlackBookButton then
@@ -38,8 +39,7 @@ function Postal_BlackBook:OnEnable()
 	SendMailNameEditBox:SetHistoryLines(15)
 	self:RawHook("SendMailFrame_Reset", true)
 	self:RawHook("MailFrameTab_OnClick", true)
-	self:RawHook("PlayerNameAutocomplete", true)
-	self:RawHookScript(SendMailNameEditBox, "OnCharComposition")
+	self:RawHookScript(SendMailNameEditBox, "OnTextChanged")
 	self:RegisterEvent("MAIL_SHOW")
 
 	-- For enabling after a disable
@@ -125,6 +125,7 @@ function Postal_BlackBook:SendMailFrame_Reset()
 	self.hooks["SendMailFrame_Reset"]()
 	if Postal.db.profile.BlackBook.AutoFill then
 		SendMailNameEditBox:SetText(name)
+		previousEditBoxNameLen = name:len()
 		SendMailNameEditBox:HighlightText()
 	end
 end
@@ -140,6 +141,7 @@ function Postal_BlackBook:MailFrameTab_OnClick(button, tab)
 		local name = Postal.db.profile.BlackBook.recent[1]
 		if name and SendMailNameEditBox:GetText() == "" then
 			SendMailNameEditBox:SetText(name)
+			previousEditBoxNameLen = name:len()
 			SendMailNameEditBox:HighlightText()
 		end
 	end
@@ -147,22 +149,19 @@ end
 
 -- Hook player name autocomplete to look in our dbs first
 local autocompleteScan = {"recent", "contacts"}
-function Postal_BlackBook:PlayerNameAutocomplete(...)
-	if not self:PlayerNameAutocompleteReal(...) then
-		return self.hooks["PlayerNameAutocomplete"](...)
-	end
-end
+function Postal_BlackBook:OnTextChanged(editbox, userInput, ...)
+	if userInput then
+		-- Call Blizzard's function first for its own autocomplete popup
+		self.hooks[SendMailNameEditBox].OnTextChanged(editbox, userInput, ...)
 
-function Postal_BlackBook:OnCharComposition(...)
-	if not self:PlayerNameAutocompleteReal(...) then
-		return self.hooks[SendMailNameEditBox].OnCharComposition(...)
-	end
-end
-
-function Postal_BlackBook:PlayerNameAutocompleteReal(editbox, char, skipFriends, skipGuild, ...)
-	if editbox == SendMailNameEditBox then
 		local text = strupper(editbox:GetText())
 		local textlen = strlen(text)
+
+		if previousEditBoxNameLen >= textlen then
+			previousEditBoxNameLen = textlen
+			return
+		end
+		previousEditBoxNameLen = textlen
 
 		-- Check alt list
 		local db = Postal.db.global.BlackBook.alts
@@ -174,12 +173,8 @@ function Postal_BlackBook:PlayerNameAutocompleteReal(editbox, char, skipFriends,
 			if r == realm and f == faction and p ~= player then
 				if strfind(strupper(p), text, 1, 1) == 1 then
 					editbox:SetText(p)
-					if editbox:IsInIMECompositionMode() then
-						editbox:HighlightText(textlen - strlen(char), -1)
-					else
-						editbox:HighlightText(textlen, -1)
-					end
-					return true
+					editbox:HighlightText(textlen, -1)
+					return
 				end
 			end
 		end
@@ -191,13 +186,31 @@ function Postal_BlackBook:PlayerNameAutocompleteReal(editbox, char, skipFriends,
 				local name = db[j]
 				if strfind(strupper(name), text, 1, 1) == 1 then
 					editbox:SetText(name)
-					if editbox:IsInIMECompositionMode() then
-						editbox:HighlightText(textlen - strlen(char), -1)
-					else
-						editbox:HighlightText(textlen, -1)
-					end
-					return true
+					editbox:HighlightText(textlen, -1)
+					return
 				end
+			end
+		end
+
+		-- Check friends list
+		local numFriends = GetNumFriends()
+		for i = 1, numFriends do
+			local name = GetFriendInfo(i)
+			if name and strfind(strupper(name), text, 1, 1) == 1 then
+				editbox:SetText(name)
+				editbox:HighlightText(textlen, -1)
+				return
+			end
+		end
+
+		-- Check guild list
+		numFriends = GetNumGuildMembers(true)
+		for i = 1, numFriends do
+			local name = GetGuildRosterInfo(i)
+			if name and strfind(strupper(name), text, 1, 1) == 1 then
+				editbox:SetText(name)
+				editbox:HighlightText(textlen, -1)
+				return
 			end
 		end
 	end
@@ -205,6 +218,7 @@ end
 
 function Postal_BlackBook.SetSendMailName(dropdownbutton, arg1, arg2, checked)
 	SendMailNameEditBox:SetText(arg1)
+	previousEditBoxNameLen = arg1:len()
 	if SendMailNameEditBox:HasFocus() then SendMailSubjectEditBox:SetFocus() end
 	CloseDropDownMenus()
 end
