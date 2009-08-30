@@ -13,7 +13,7 @@ local ignoresortlocale = {
 	["zhTW"] = true,
 }
 local enableAltsMenu
-local previousEditBoxNameLen = 0
+local autoCompleteFlag = false
 
 function Postal_BlackBook:OnEnable()
 	if not Postal_BlackBookButton then
@@ -40,6 +40,8 @@ function Postal_BlackBook:OnEnable()
 	self:RawHook("SendMailFrame_Reset", true)
 	self:RawHook("MailFrameTab_OnClick", true)
 	self:RawHookScript(SendMailNameEditBox, "OnTextChanged")
+	self:HookScript(SendMailNameEditBox, "OnChar")
+	self:HookScript(SendMailNameEditBox, "OnEditFocusGained")
 	self:RegisterEvent("MAIL_SHOW")
 
 	-- For enabling after a disable
@@ -125,7 +127,6 @@ function Postal_BlackBook:SendMailFrame_Reset()
 	self.hooks["SendMailFrame_Reset"]()
 	if Postal.db.profile.BlackBook.AutoFill then
 		SendMailNameEditBox:SetText(name)
-		previousEditBoxNameLen = name:len()
 		SendMailNameEditBox:HighlightText()
 	end
 end
@@ -141,10 +142,20 @@ function Postal_BlackBook:MailFrameTab_OnClick(button, tab)
 		local name = Postal.db.profile.BlackBook.recent[1]
 		if name and SendMailNameEditBox:GetText() == "" then
 			SendMailNameEditBox:SetText(name)
-			previousEditBoxNameLen = name:len()
 			SendMailNameEditBox:HighlightText()
 		end
 	end
+end
+
+function Postal_BlackBook:OnEditFocusGained(editbox, ...)
+	editbox:HighlightText()
+end
+
+-- OnChar fires before OnTextChanged, so this will signify we want to
+-- auto-complete when OnTextChanged fires
+-- OnChar does not fire for Backspace, Delete keys that shorten the text
+function Postal_BlackBook:OnChar(editbox, ...)
+	autoCompleteFlag = true
 end
 
 -- Hook player name autocomplete to look in our dbs first
@@ -158,15 +169,15 @@ function Postal_BlackBook:OnTextChanged(editbox, userInput, ...)
 			self.hooks[SendMailNameEditBox].OnTextChanged(editbox, userInput, ...)
 		end
 
-		local text = strupper(editbox:GetText())
-		local textlen = strlen(text)
-
-		if previousEditBoxNameLen >= textlen then
-			previousEditBoxNameLen = textlen
+		if not autoCompleteFlag then
+			autoCompleteFlag = false
 			SendMailFrame_CanSend(editbox)
 			return
 		end
-		previousEditBoxNameLen = textlen
+		autoCompleteFlag = false
+
+		local text = strupper(editbox:GetText())
+		local textlen = strlen(text)
 
 		-- Check alt list
 		if db.AutoCompleteAlts then
@@ -248,7 +259,6 @@ end
 
 function Postal_BlackBook.SetSendMailName(dropdownbutton, arg1, arg2, checked)
 	SendMailNameEditBox:SetText(arg1)
-	previousEditBoxNameLen = arg1:len()
 	if SendMailNameEditBox:HasFocus() then SendMailSubjectEditBox:SetFocus() end
 	CloseDropDownMenus()
 end
