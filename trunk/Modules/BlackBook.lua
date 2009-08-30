@@ -163,6 +163,7 @@ function Postal_BlackBook:OnTextChanged(editbox, userInput, ...)
 
 		if previousEditBoxNameLen >= textlen then
 			previousEditBoxNameLen = textlen
+			SendMailFrame_CanSend(editbox)
 			return
 		end
 		previousEditBoxNameLen = textlen
@@ -179,6 +180,7 @@ function Postal_BlackBook:OnTextChanged(editbox, userInput, ...)
 					if strfind(strupper(p), text, 1, 1) == 1 then
 						editbox:SetText(p)
 						editbox:HighlightText(textlen, -1)
+						SendMailFrame_CanSend(editbox)
 						return
 					end
 				end
@@ -193,6 +195,7 @@ function Postal_BlackBook:OnTextChanged(editbox, userInput, ...)
 				if strfind(strupper(name), text, 1, 1) == 1 then
 					editbox:SetText(name)
 					editbox:HighlightText(textlen, -1)
+					SendMailFrame_CanSend(editbox)
 					return
 				end
 			end
@@ -206,6 +209,7 @@ function Postal_BlackBook:OnTextChanged(editbox, userInput, ...)
 				if strfind(strupper(name), text, 1, 1) == 1 then
 					editbox:SetText(name)
 					editbox:HighlightText(textlen, -1)
+					SendMailFrame_CanSend(editbox)
 					return
 				end
 			end
@@ -219,6 +223,7 @@ function Postal_BlackBook:OnTextChanged(editbox, userInput, ...)
 				if name and strfind(strupper(name), text, 1, 1) == 1 then
 					editbox:SetText(name)
 					editbox:HighlightText(textlen, -1)
+					SendMailFrame_CanSend(editbox)
 					return
 				end
 			end
@@ -232,11 +237,13 @@ function Postal_BlackBook:OnTextChanged(editbox, userInput, ...)
 				if name and strfind(strupper(name), text, 1, 1) == 1 then
 					editbox:SetText(name)
 					editbox:HighlightText(textlen, -1)
+					SendMailFrame_CanSend(editbox)
 					return
 				end
 			end
 		end
 	end
+	SendMailFrame_CanSend(editbox)
 end
 
 function Postal_BlackBook.SetSendMailName(dropdownbutton, arg1, arg2, checked)
