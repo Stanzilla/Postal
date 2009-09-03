@@ -148,7 +148,8 @@ function Postal_BlackBook:MailFrameTab_OnClick(button, tab)
 end
 
 function Postal_BlackBook:OnEditFocusGained(editbox, ...)
-	editbox:HighlightText()
+	-- Most other addons aren't hooking properly and do not pass in editbox at all.
+	SendMailNameEditBox:HighlightText()
 end
 
 -- OnChar fires before OnTextChanged, so this will signify we want to
