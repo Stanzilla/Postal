@@ -146,6 +146,19 @@ function Postal_OpenAll:ProcessNext()
 			-- Find first attachment index backwards
 			attachIndex = attachIndex - 1
 		end
+		if attachIndex > 0 and not invFull and Postal.db.profile.OpenAll.KeepFreeSpace>0 then
+			local free=0
+			for bag=0,NUM_BAG_SLOTS do
+				local bagFree,bagFam = GetContainerNumFreeSlots(bag)
+				if bagFam==0 then
+					free = free + bagFree
+				end
+			end
+			if free <= Postal.db.profile.OpenAll.KeepFreeSpace then
+				invFull = true
+				Postal:Print(format(L["Not taking more items as there are now only %d regular bagslots free."], free))
+			end
+		end
 		if attachIndex > 0 and not invFull then
 			-- If there's attachments, take the item
 			--Postal:Print("Getting Item from Message "..mailIndex..", "..attachIndex)
@@ -220,10 +233,18 @@ function Postal_OpenAll:UI_ERROR_MESSAGE(event, error_message)
 	end
 end
 
+function Postal_OpenAll.SetKeepFreeSpace(dropdownbutton, arg1)
+	Postal.db.profile.OpenAll.KeepFreeSpace = arg1
+end
+
+local keepFreeOptions={0,1,2,3,5,10,15,20,25,30}
+
 function Postal_OpenAll.ModuleMenu(self, level)
 	if not level then return end
 	local info = self.info
 	wipe(info)
+	local db = Postal.db.profile.OpenAll
+	
 	if level == 1 + self.levelAdjust then
 		info.hasArrow = 1
 		info.keepShownOnClick = 1
@@ -247,7 +268,6 @@ function Postal_OpenAll.ModuleMenu(self, level)
 		UIDropDownMenu_AddButton(info, level)
 
 	elseif level == 2 + self.levelAdjust then
-		local db = Postal.db.profile.OpenAll
 
 		info.keepShownOnClick = 1
 		info.func = Postal.SaveOption
@@ -312,11 +332,31 @@ function Postal_OpenAll.ModuleMenu(self, level)
 			UIDropDownMenu_AddButton(info, level)
 
 		elseif UIDROPDOWNMENU_MENU_VALUE == "OtherOptions" then
+			local t = {
+				text = L["Keep free space"],
+				keepShownOnClick = 1,
+				hasArrow = 1,
+				value = "KeepFreeSpace",
+				notCheckable = 1
+			}
+			UIDropDownMenu_AddButton(t, level)
+
 			info.text = L["Verbose mode"]
 			info.arg2 = "SpamChat"
 			info.checked = db.SpamChat
 			UIDropDownMenu_AddButton(info, level)
 		end
 
+	elseif level == 3 + self.levelAdjust then
+		if UIDROPDOWNMENU_MENU_VALUE == "KeepFreeSpace" then
+			local keepFree = db.KeepFreeSpace
+			info.func = Postal_OpenAll.SetKeepFreeSpace
+			for _,v in ipairs(keepFreeOptions) do
+				info.text = tostring(v)
+				info.checked = v == keepFree
+				info.arg1 = v
+				UIDropDownMenu_AddButton(info, level)
+			end
+		end
 	end
 end

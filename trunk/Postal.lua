@@ -25,6 +25,7 @@ local defaults = {
 			NeutralAHWon = true,
 			Attachments = true,
 			SpamChat = true,
+			KeepFreeSpace = 1,
 		},
 		Express = {
 			EnableAltClick = true,
