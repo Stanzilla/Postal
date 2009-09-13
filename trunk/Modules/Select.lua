@@ -34,10 +34,22 @@ updateFrame:SetScript("OnUpdate", function(self, elapsed)
 	end
 end)
 
+local lastUnseen,lastTime = 0,0
 local function noop() end
 local function printTooMuchMail()
+	local cur,tot = GetInboxNumItems()
+	if tot-cur ~= lastUnseen or GetTime()-lastTime>=61 then
+		-- This is a low-effort guess at how long is remaining until we can fetch new mail.
+		lastUnseen = tot-cur
+		lastTime = GetTime()
+	end
+	if cur>=50 then
+		Postal:Print(format(L["There are %i more messages not currently shown."], lastUnseen))
+	else
+		Postal:Print(format(L["There are %i more messages not currently shown. More should become available in %i seconds."], lastUnseen, lastTime+61-GetTime()))
+	end
+	
 	-- Just print once
-	Postal:Print((gsub(INBOX_TOO_MUCH_MAIL, "|n", " ")))
 	InboxTooMuchMail.Show = noop
 end
 
