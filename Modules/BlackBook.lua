@@ -13,7 +13,10 @@ local ignoresortlocale = {
 	["zhTW"] = true,
 }
 local enableAltsMenu
-local autoCompleteFlag = false
+local Postal_BlackBook_Autocomplete_Flags = {
+	include = AUTOCOMPLETE_FLAG_ALL,
+	exclude = AUTOCOMPLETE_FLAG_NONE,
+}
 
 function Postal_BlackBook:OnEnable()
 	if not Postal_BlackBookButton then
@@ -39,10 +42,14 @@ function Postal_BlackBook:OnEnable()
 	SendMailNameEditBox:SetHistoryLines(15)
 	self:RawHook("SendMailFrame_Reset", true)
 	self:RawHook("MailFrameTab_OnClick", true)
-	self:RawHookScript(SendMailNameEditBox, "OnTextChanged")
-	self:HookScript(SendMailNameEditBox, "OnChar")
+	self:RawHookScript(SendMailNameEditBox, "OnChar")
 	self:HookScript(SendMailNameEditBox, "OnEditFocusGained")
+	self:RawHook("AutoComplete_Update", true)
 	self:RegisterEvent("MAIL_SHOW")
+
+	local db = Postal.db.profile.BlackBook
+	Postal_BlackBook_Autocomplete_Flags.exclude = bit.bor(db.AutoCompleteFriends and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_FRIEND, db.AutoCompleteGuild and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_IN_GUILD)
+	SendMailNameEditBox.autoCompleteParams = Postal_BlackBook_Autocomplete_Flags
 
 	-- For enabling after a disable
 	Postal_BlackBookButton:Show()
@@ -52,6 +59,7 @@ function Postal_BlackBook:OnDisable()
 	-- Disabling modules unregisters all events/hook automatically
 	SendMailNameEditBox:SetHistoryLines(1)
 	Postal_BlackBookButton:Hide()
+	SendMailNameEditBox.autoCompleteParams = AUTOCOMPLETE_LIST.MAIL
 end
 
 function Postal_BlackBook:MAIL_SHOW()
@@ -152,110 +160,73 @@ function Postal_BlackBook:OnEditFocusGained(editbox, ...)
 	SendMailNameEditBox:HighlightText()
 end
 
--- OnChar fires before OnTextChanged, so this will signify we want to
--- auto-complete when OnTextChanged fires
--- OnChar does not fire for Backspace, Delete keys that shorten the text
-function Postal_BlackBook:OnChar(editbox, ...)
-	autoCompleteFlag = true
+function Postal_BlackBook:AutoComplete_Update(editBox, editBoxText, utf8Position, ...)
+	if editBox ~= SendMailNameEditBox or not Postal.db.profile.BlackBook.DisableBlizzardAutoComplete then
+		self.hooks["AutoComplete_Update"](editBox, editBoxText, utf8Position, ...)
+	end
 end
 
+-- OnChar fires before OnTextChanged
+-- OnChar does not fire for Backspace, Delete keys that shorten the text
 -- Hook player name autocomplete to look in our dbs first
-local autocompleteScan = {"recent", "contacts"}
-function Postal_BlackBook:OnTextChanged(editbox, userInput, ...)
-	if userInput then
-		local db = Postal.db.profile.BlackBook
+function Postal_BlackBook:OnChar(editbox, ...)
+	if editbox:GetUTF8CursorPosition() ~= strlenutf8(editbox:GetText()) then return end
 
-		-- Call Blizzard's function first for its own autocomplete popup
-		if not db.DisableBlizzardAutoComplete then
-			self.hooks[SendMailNameEditBox].OnTextChanged(editbox, userInput, ...)
-		end
+	local db = Postal.db.profile.BlackBook
+	local text = strupper(editbox:GetText())
+	local textlen = strlen(text)
+	local newname
 
-		if not autoCompleteFlag then
-			autoCompleteFlag = false
-			SendMailFrame_CanSend(editbox)
-			return
-		end
-		autoCompleteFlag = false
-
-		local text = strupper(editbox:GetText())
-		local textlen = strlen(text)
-
-		-- Check alt list
-		if db.AutoCompleteAlts then
-			local db = Postal.db.global.BlackBook.alts
-			local realm = GetRealmName()
-			local faction = UnitFactionGroup("player")
-			local player = UnitName("player")
-			for i = 1, #db do
-				local p, r, f = strsplit("|", db[i])
-				if r == realm and f == faction and p ~= player then
-					if strfind(strupper(p), text, 1, 1) == 1 then
-						editbox:SetText(p)
-						editbox:HighlightText(textlen, -1)
-						SendMailFrame_CanSend(editbox)
-						return
-					end
-				end
-			end
-		end
-
-		-- Check recent list
-		if db.AutoCompleteRecent then
-			local db2 = db.recent
-			for j = 1, #db2 do
-				local name = db2[j]
-				if strfind(strupper(name), text, 1, 1) == 1 then
-					editbox:SetText(name)
-					editbox:HighlightText(textlen, -1)
-					SendMailFrame_CanSend(editbox)
-					return
-				end
-			end
-		end
-
-		-- Check contacts list
-		if db.AutoCompleteContacts then
-			local db2 = db.contacts
-			for j = 1, #db2 do
-				local name = db2[j]
-				if strfind(strupper(name), text, 1, 1) == 1 then
-					editbox:SetText(name)
-					editbox:HighlightText(textlen, -1)
-					SendMailFrame_CanSend(editbox)
-					return
-				end
-			end
-		end
-
-		-- Check friends list
-		if db.AutoCompleteFriends then
-			local numFriends = GetNumFriends()
-			for i = 1, numFriends do
-				local name = GetFriendInfo(i)
-				if name and strfind(strupper(name), text, 1, 1) == 1 then
-					editbox:SetText(name)
-					editbox:HighlightText(textlen, -1)
-					SendMailFrame_CanSend(editbox)
-					return
-				end
-			end
-		end
-
-		-- Check guild list
-		if db.AutoCompleteGuild then
-			numFriends = GetNumGuildMembers(true)
-			for i = 1, numFriends do
-				local name = GetGuildRosterInfo(i)
-				if name and strfind(strupper(name), text, 1, 1) == 1 then
-					editbox:SetText(name)
-					editbox:HighlightText(textlen, -1)
-					SendMailFrame_CanSend(editbox)
-					return
+	-- Check alt list
+	if db.AutoCompleteAlts then
+		local db = Postal.db.global.BlackBook.alts
+		local realm = GetRealmName()
+		local faction = UnitFactionGroup("player")
+		local player = UnitName("player")
+		for i = 1, #db do
+			local p, r, f = strsplit("|", db[i])
+			if r == realm and f == faction and p ~= player then
+				if strfind(strupper(p), text, 1, 1) == 1 then
+					newname = p
+					break
 				end
 			end
 		end
 	end
-	SendMailFrame_CanSend(editbox)
+
+	-- Check recent list
+	if not newname and db.AutoCompleteRecent then
+		local db2 = db.recent
+		for j = 1, #db2 do
+			local name = db2[j]
+			if strfind(strupper(name), text, 1, 1) == 1 then
+				newname = name
+				break
+			end
+		end
+	end
+
+	-- Check contacts list
+	if not newname and db.AutoCompleteContacts then
+		local db2 = db.contacts
+		for j = 1, #db2 do
+			local name = db2[j]
+			if strfind(strupper(name), text, 1, 1) == 1 then
+				newname = name
+				break
+			end
+		end
+	end
+
+	-- Call the original Blizzard function to autocomplete and for its popup
+	self.hooks[SendMailNameEditBox].OnChar(editbox, ...)
+
+	-- Set our match if we found one (overriding Blizzard's match if there's one)
+	if newname then
+		editbox:SetText(newname)
+		editbox:HighlightText(textlen, -1)
+		editbox:SetCursorPosition(textlen)
+	end
 end
 
 function Postal_BlackBook.SetSendMailName(dropdownbutton, arg1, arg2, checked)
@@ -519,6 +490,12 @@ function Postal_BlackBook.BlackBookMenu(self, level)
 	end
 end
 
+function Postal_BlackBook.SaveFriendGuildOption(dropdownbutton, arg1, arg2, checked)
+	Postal.SaveOption(dropdownbutton, arg1, arg2, checked)
+	local db = Postal.db.profile.BlackBook
+	Postal_BlackBook_Autocomplete_Flags.exclude = bit.bor(db.AutoCompleteFriends and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_FRIEND, db.AutoCompleteGuild and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_IN_GUILD)
+end
+
 function Postal_BlackBook.ModuleMenu(self, level)
 	if not level then return end
 	local info = self.info
@@ -568,6 +545,7 @@ function Postal_BlackBook.ModuleMenu(self, level)
 			info.text = L["Friends"]
 			info.arg2 = "AutoCompleteFriends"
 			info.checked = db.AutoCompleteFriends
+			info.func = Postal_BlackBook.SaveFriendGuildOption
 			UIDropDownMenu_AddButton(info, level)
 
 			info.text = L["Guild"]
@@ -578,6 +556,7 @@ function Postal_BlackBook.ModuleMenu(self, level)
 			info.text = L["Disable Blizzard's auto-completion popup menu"]
 			info.arg2 = "DisableBlizzardAutoComplete"
 			info.checked = db.DisableBlizzardAutoComplete
+			info.func = Postal.SaveOption
 			UIDropDownMenu_AddButton(info, level)
 		end
 	end
