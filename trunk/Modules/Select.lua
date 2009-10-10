@@ -233,6 +233,19 @@ function Postal_Select:ProcessNext()
 				-- Find first attachment index backwards
 				attachIndex = attachIndex - 1
 			end
+			if attachIndex > 0 and not invFull and Postal.db.profile.Select.KeepFreeSpace > 0 then
+				local free = 0
+				for bag = 0, NUM_BAG_SLOTS do
+					local bagFree, bagFam = GetContainerNumFreeSlots(bag)
+					if bagFam == 0 then
+						free = free + bagFree
+					end
+				end
+				if free <= Postal.db.profile.Select.KeepFreeSpace then
+					invFull = true
+					Postal:Print(format(L["Not taking more items as there are now only %d regular bagslots free."], free))
+				end
+			end
 			if attachIndex > 0 and not invFull then
 				-- If there's attachments, take the item
 				--Postal:Print("Getting Item from Message "..mailIndex..", "..attachIndex)
@@ -357,6 +370,11 @@ function Postal_Select:UI_ERROR_MESSAGE(event, error_message)
 	end
 end
 
+function Postal_Select.SetKeepFreeSpace(dropdownbutton, arg1, arg2, checked)
+	Postal.db.profile.Select.KeepFreeSpace = arg1
+end
+local keepFreeOptions= {0, 1, 2, 3, 5, 10, 15, 20, 25, 30}
+
 function Postal_Select.ModuleMenu(self, level)
 	if not level then return end
 	local info = self.info
@@ -369,6 +387,26 @@ function Postal_Select.ModuleMenu(self, level)
 		info.arg2 = "SpamChat"
 		info.checked = Postal.db.profile.Select.SpamChat
 		UIDropDownMenu_AddButton(info, level)
+
+		info.text = L["Keep free space"]
+		info.hasArrow = 1
+		info.checked = nil
+		info.value = "KeepFreeSpace"
+		info.func = self.UncheckHack
+		UIDropDownMenu_AddButton(info, level)
+
+	elseif level == 2 + self.levelAdjust then
+		if UIDROPDOWNMENU_MENU_VALUE == "KeepFreeSpace" then
+			local keepFree = Postal.db.profile.Select.KeepFreeSpace
+			info.func = Postal_Select.SetKeepFreeSpace
+			for i = 1, #keepFreeOptions do
+				local v = keepFreeOptions[i]
+				info.text = v
+				info.checked = v == keepFree
+				info.arg1 = v
+				UIDropDownMenu_AddButton(info, level)
+			end
+		end
 	end
 end
 
