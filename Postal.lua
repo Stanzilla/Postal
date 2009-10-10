@@ -11,6 +11,7 @@ local defaults = {
 		OpenSpeed = 0.50,
 		Select = {
 			SpamChat = true,
+			KeepFreeSpace = 1,
 		},
 		OpenAll = {
 			AHCancelled = true,
