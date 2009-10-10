@@ -373,7 +373,6 @@ end
 function Postal_Select.SetKeepFreeSpace(dropdownbutton, arg1, arg2, checked)
 	Postal.db.profile.Select.KeepFreeSpace = arg1
 end
-local keepFreeOptions= {0, 1, 2, 3, 5, 10, 15, 20, 25, 30}
 
 function Postal_Select.ModuleMenu(self, level)
 	if not level then return end
@@ -381,26 +380,27 @@ function Postal_Select.ModuleMenu(self, level)
 	wipe(info)
 	if level == 1 + self.levelAdjust then
 		info.keepShownOnClick = 1
+
+		info.text = L["Keep free space"]
+		info.hasArrow = 1
+		info.value = "KeepFreeSpace"
+		info.func = self.UncheckHack
+		UIDropDownMenu_AddButton(info, level)
+
 		info.text = L["Verbose mode"]
+		info.hasArrow = nil
+		info.value = nil
 		info.func = Postal.SaveOption
 		info.arg1 = "Select"
 		info.arg2 = "SpamChat"
 		info.checked = Postal.db.profile.Select.SpamChat
 		UIDropDownMenu_AddButton(info, level)
 
-		info.text = L["Keep free space"]
-		info.hasArrow = 1
-		info.checked = nil
-		info.value = "KeepFreeSpace"
-		info.func = self.UncheckHack
-		UIDropDownMenu_AddButton(info, level)
-
 	elseif level == 2 + self.levelAdjust then
 		if UIDROPDOWNMENU_MENU_VALUE == "KeepFreeSpace" then
 			local keepFree = Postal.db.profile.Select.KeepFreeSpace
 			info.func = Postal_Select.SetKeepFreeSpace
-			for i = 1, #keepFreeOptions do
-				local v = keepFreeOptions[i]
+			for _, v in ipairs(Postal.keepFreeOptions) do
 				info.text = v
 				info.checked = v == keepFree
 				info.arg1 = v

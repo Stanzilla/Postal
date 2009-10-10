@@ -56,6 +56,7 @@ local defaults = {
 local _G = getfenv(0)
 local t = {}
 local aboutFrame
+Postal.keepFreeOptions = {0, 1, 2, 3, 5, 10, 15, 20, 25, 30}
 
 -- Use a common frame and setup some common functions for the Postal dropdown menus
 local Postal_DropDownMenu = CreateFrame("Frame", "Postal_DropDownMenu")
