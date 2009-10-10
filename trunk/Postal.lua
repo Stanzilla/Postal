@@ -43,6 +43,7 @@ local defaults = {
 			AutoCompleteFriends = true,
 			AutoCompleteGuild = true,
 			DisableBlizzardAutoComplete = false,
+			UseAutoComplete = true,
 		},
 	},
 	global = {

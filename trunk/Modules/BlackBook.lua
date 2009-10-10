@@ -42,7 +42,9 @@ function Postal_BlackBook:OnEnable()
 	SendMailNameEditBox:SetHistoryLines(15)
 	self:RawHook("SendMailFrame_Reset", true)
 	self:RawHook("MailFrameTab_OnClick", true)
-	self:RawHookScript(SendMailNameEditBox, "OnChar")
+	if Postal.db.profile.BlackBook.UseAutoComplete then
+		self:RawHookScript(SendMailNameEditBox, "OnChar")
+	end
 	self:HookScript(SendMailNameEditBox, "OnEditFocusGained")
 	self:RawHook("AutoComplete_Update", true)
 	self:RegisterEvent("MAIL_SHOW")
@@ -496,6 +498,20 @@ function Postal_BlackBook.SaveFriendGuildOption(dropdownbutton, arg1, arg2, chec
 	Postal_BlackBook_Autocomplete_Flags.exclude = bit.bor(db.AutoCompleteFriends and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_FRIEND, db.AutoCompleteGuild and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_IN_GUILD)
 end
 
+function Postal_BlackBook.SetAutoComplete(dropdownbutton, arg1, arg2, checked)
+	local self = Postal_BlackBook
+	Postal.db.profile.BlackBook.UseAutoComplete = not checked
+	if checked then
+		if self:IsHooked(SendMailNameEditBox, "OnChar") then
+			self:Unhook(SendMailNameEditBox, "OnChar")
+		end
+	else
+		if not self:IsHooked(SendMailNameEditBox, "OnChar") then
+			self:RawHookScript(SendMailNameEditBox, "OnChar")
+		end
+	end
+end
+
 function Postal_BlackBook.ModuleMenu(self, level)
 	if not level then return end
 	local info = self.info
@@ -521,12 +537,19 @@ function Postal_BlackBook.ModuleMenu(self, level)
 
 	elseif level == 2 + self.levelAdjust then
 		local db = Postal.db.profile.BlackBook
-
-		info.keepShownOnClick = 1
-		info.func = Postal.SaveOption
 		info.arg1 = "BlackBook"
 
 		if UIDROPDOWNMENU_MENU_VALUE == "AutoComplete" then
+			info.text = L["Use Postal's auto-complete"]
+			info.arg2 = "UseAutoComplete"
+			info.checked = db.UseAutoComplete
+			info.func = Postal_BlackBook.SetAutoComplete
+			UIDropDownMenu_AddButton(info, level)
+
+			info.func = Postal.SaveOption
+			info.disabled = not db.UseAutoComplete
+			info.keepShownOnClick = 1
+
 			info.text = L["Alts"]
 			info.arg2 = "AutoCompleteAlts"
 			info.checked = db.AutoCompleteAlts
@@ -541,6 +564,8 @@ function Postal_BlackBook.ModuleMenu(self, level)
 			info.arg2 = "AutoCompleteContacts"
 			info.checked = db.AutoCompleteContacts
 			UIDropDownMenu_AddButton(info, level)
+
+			info.disabled = nil
 
 			info.text = L["Friends"]
 			info.arg2 = "AutoCompleteFriends"
