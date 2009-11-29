@@ -18,6 +18,7 @@ local checkboxFunc = function(self) Postal_Select:ToggleMail(self) end
 local mailIndex, attachIndex
 local lastmailIndex, lastattachIndex, lastmailmoneyIndex
 local lastItem
+local skipFlag = false
 local invFull
 local lastCheck
 
@@ -172,6 +173,7 @@ function Postal_Select:HandleSelect(mode)
 	mailIndex = GetInboxNumItems() or 0
 	attachIndex = ATTACHMENTS_MAX_RECEIVE
 	invFull = nil
+	skipFlag = false
 	lastmailIndex = nil
 	lastattachIndex = nil
 	lastmailmoneyIndex = nil
@@ -223,6 +225,7 @@ function Postal_Select:ProcessNext()
 			end
 			if (msgCOD and msgCOD > 0) or (isGM) then
 				-- Skip mail if it contains a CoD or if its from a GM
+				skipFlag = true
 				selectedMail[mailIndex] = nil
 				mailIndex = mailIndex - 1
 				attachIndex = ATTACHMENTS_MAX_RECEIVE
@@ -313,6 +316,14 @@ function Postal_Select:ProcessNext()
 			end
 		end
 	else
+		if IsAddOnLoaded("MrPlow") then
+			if MrPlow.DoStuff then
+				MrPlow:DoStuff("stack")
+			elseif MrPlow.ParseInventory then
+				MrPlow:ParseInventory()
+			end
+		end
+		if skipFlag then Postal:Print(L["Some Messages May Have Been Skipped."]) end
 		self:Reset()
 	end
 end
