@@ -207,7 +207,13 @@ function Postal_OpenAll:ProcessNext()
 			return self:ProcessNext() -- tail call
 		end
 	else
-		if IsAddOnLoaded("MrPlow") then MrPlow:ParseInventory() end
+		if IsAddOnLoaded("MrPlow") then
+			if MrPlow.DoStuff then
+				MrPlow:DoStuff("stack")
+			elseif MrPlow.ParseInventory then
+				MrPlow:ParseInventory()
+			end
+		end
 		if skipFlag then Postal:Print(L["Some Messages May Have Been Skipped."]) end
 		self:Reset()
 	end
