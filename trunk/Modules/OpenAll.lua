@@ -250,8 +250,10 @@ end
 function Postal_OpenAll:UI_ERROR_MESSAGE(event, error_message)
 	if error_message == ERR_INV_FULL then
 		invFull = true
+		wait = false
 	elseif error_message == ERR_ITEM_MAX_COUNT then
 		attachIndex = attachIndex - 1
+		wait = false
 	end
 end
 
