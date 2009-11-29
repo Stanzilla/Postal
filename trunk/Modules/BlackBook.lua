@@ -50,7 +50,9 @@ function Postal_BlackBook:OnEnable()
 	self:RegisterEvent("MAIL_SHOW")
 
 	local db = Postal.db.profile.BlackBook
-	Postal_BlackBook_Autocomplete_Flags.exclude = bit.bor(db.AutoCompleteFriends and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_FRIEND, db.AutoCompleteGuild and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_IN_GUILD)
+	local exclude = bit.bor(db.AutoCompleteFriends and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_FRIEND,
+		db.AutoCompleteGuild and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_IN_GUILD)
+	Postal_BlackBook_Autocomplete_Flags.include = bit.bxor(AUTOCOMPLETE_FLAG_ALL, exclude) 
 	SendMailNameEditBox.autoCompleteParams = Postal_BlackBook_Autocomplete_Flags
 
 	-- For enabling after a disable
@@ -495,7 +497,9 @@ end
 function Postal_BlackBook.SaveFriendGuildOption(dropdownbutton, arg1, arg2, checked)
 	Postal.SaveOption(dropdownbutton, arg1, arg2, checked)
 	local db = Postal.db.profile.BlackBook
-	Postal_BlackBook_Autocomplete_Flags.exclude = bit.bor(db.AutoCompleteFriends and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_FRIEND, db.AutoCompleteGuild and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_IN_GUILD)
+	local exclude = bit.bor(db.AutoCompleteFriends and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_FRIEND,
+		db.AutoCompleteGuild and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_IN_GUILD)
+	Postal_BlackBook_Autocomplete_Flags.include = bit.bxor(AUTOCOMPLETE_FLAG_ALL, exclude) 
 end
 
 function Postal_BlackBook.SetAutoComplete(dropdownbutton, arg1, arg2, checked)
