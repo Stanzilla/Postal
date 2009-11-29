@@ -518,3 +518,14 @@ function Postal:GetMoneyString(money)
 		return format(COPPER_AMOUNT_TEXTURE, copper, 0, 0)
 	end
 end
+
+function Postal:CountItemsAndMoney()
+	local numAttach = 0
+	local numGold = 0
+	for i = 1, GetInboxNumItems() do
+		local msgMoney, _, _, msgItem = select(5, GetInboxHeaderInfo(i))
+		numAttach = numAttach + (msgItem or 0)
+		numGold = numGold + msgMoney
+	end
+	return numAttach, numGold
+end

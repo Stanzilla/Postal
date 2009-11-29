@@ -9,11 +9,11 @@ Postal_OpenAll.description2 = L[ [[|cFFFFCC00*|r Simple filters are available fo
 |cFFFFCC00*|r Disable the Verbose option to stop the chat spam while opening mail.]] ]
 
 local mailIndex, attachIndex
-local lastmailIndex, lastattachIndex, lastmailmoneyIndex
-local lastItem
+local lastItem, lastNumAttach, lastNumGold
+local wait
 local button
 local Postal_OpenAllMenuButton
-local skipFlag = false
+local skipFlag
 local invFull
 local openAllOverride
 
@@ -42,6 +42,7 @@ function Postal_OpenAll:OnEnable()
 		end
 		button:SetText(L["Open All"])
 		button:SetScript("OnClick", function() Postal_OpenAll:OpenAll() end)
+		button:SetFrameLevel(button:GetFrameLevel() + 1)
 	end
 	if not Postal_OpenAllMenuButton then
 		-- Create the Menu Button
@@ -60,6 +61,7 @@ function Postal_OpenAll:OnEnable()
 			end
 			ToggleDropDownMenu(1, nil, Postal_DropDownMenu, self:GetName(), 0, 0)
 		end)
+		Postal_OpenAllMenuButton:SetFrameLevel(Postal_OpenAllMenuButton:GetFrameLevel() + 1)
 	end
 
 	self:RegisterEvent("MAIL_SHOW")
@@ -86,10 +88,10 @@ function Postal_OpenAll:OpenAll()
 	attachIndex = ATTACHMENTS_MAX_RECEIVE
 	invFull = nil
 	skipFlag = false
-	lastmailIndex = nil
-	lastattachIndex = nil
-	lastmailmoneyIndex = nil
-	lastItem = nil
+	lastItem = false
+	lastNumAttach = nil
+	lastNumGold = nil
+	wait = false
 	openAllOverride = IsShiftKeyDown()
 	if mailIndex == 0 then
 		return
@@ -103,24 +105,49 @@ function Postal_OpenAll:OpenAll()
 end
 
 function Postal_OpenAll:ProcessNext()
-	local _, sender, msgSubject, msgMoney, msgCOD, msgItem, msgText, isGM
 	if mailIndex > 0 then
-		sender, msgSubject, msgMoney, msgCOD, _, msgItem, _, _, msgText, _, isGM = select(3, GetInboxHeaderInfo(mailIndex))
+		-- Check if we need to wait for the mailbox to change
+		if wait then
+			local attachCount, goldCount = Postal:CountItemsAndMoney()
+			if lastNumGold ~= goldCount then
+				-- Process next mail, gold has been taken
+				wait = false
+				mailIndex = mailIndex - 1
+				attachIndex = ATTACHMENTS_MAX_RECEIVE
+			elseif lastNumAttach ~= attachCount then
+				-- Process next item, an attachment has been taken
+				wait = false
+				attachIndex = attachIndex - 1
+				if lastItem then
+					-- The item taken was the last item, process next mail
+					lastItem = false
+					mailIndex = mailIndex - 1
+					attachIndex = ATTACHMENTS_MAX_RECEIVE
+				end
+			else
+				-- Wait longer until something in the mailbox changes
+				updateFrame:Show()
+				return
+			end
+		end
+
+		local sender, msgSubject, msgMoney, msgCOD, _, msgItem, _, _, msgText, _, isGM = select(3, GetInboxHeaderInfo(mailIndex))
+
+		-- Skip mail if it contains a CoD or if its from a GM
 		if (msgCOD and msgCOD > 0) or (isGM) then
-			-- Skip mail if it contains a CoD or if its from a GM
 			skipFlag = true
 			mailIndex = mailIndex - 1
 			attachIndex = ATTACHMENTS_MAX_RECEIVE
-			lastItem = nil
 			return self:ProcessNext() -- tail call
 		end
+
+		-- Filter by mail type
 		local mailType = Postal:GetMailType(msgSubject)
 		if mailType == "NonAHMail" then
 			-- Skip player sent mail with attachments according to user options
 			if not (openAllOverride or Postal.db.profile.OpenAll.Attachments) and msgItem then
 				mailIndex = mailIndex - 1
 				attachIndex = ATTACHMENTS_MAX_RECEIVE
-				lastItem = nil
 				return self:ProcessNext() -- tail call
 			end
 		else
@@ -133,19 +160,22 @@ function Postal_OpenAll:ProcessNext()
 			if not (openAllOverride or Postal.db.profile.OpenAll[mailType]) then
 				mailIndex = mailIndex - 1
 				attachIndex = ATTACHMENTS_MAX_RECEIVE
-				lastItem = nil
 				return self:ProcessNext() -- tail call
 			end
 		end
+
+		-- Print message on next mail
 		if Postal.db.profile.OpenAll.SpamChat and attachIndex == ATTACHMENTS_MAX_RECEIVE then
-			-- Print message on next mail
 			local moneyString = msgMoney > 0 and " ["..Postal:GetMoneyString(msgMoney).."]" or ""
-			Postal:Print(format("%s %d: %s%s", L["Processing Message"], mailIndex, msgSubject, moneyString))
+			Postal:Print(format("%s %d: %s%s", L["Processing Message"], mailIndex, msgSubject or "", moneyString))
 		end
+
+		-- Find next attachment index backwards
 		while not GetInboxItemLink(mailIndex, attachIndex) and attachIndex > 0 do
-			-- Find first attachment index backwards
 			attachIndex = attachIndex - 1
 		end
+
+		-- Check for free bag space
 		if attachIndex > 0 and not invFull and Postal.db.profile.OpenAll.KeepFreeSpace>0 then
 			local free=0
 			for bag=0,NUM_BAG_SLOTS do
@@ -159,58 +189,44 @@ function Postal_OpenAll:ProcessNext()
 				Postal:Print(format(L["Not taking more items as there are now only %d regular bagslots free."], free))
 			end
 		end
+
 		if attachIndex > 0 and not invFull then
 			-- If there's attachments, take the item
 			--Postal:Print("Getting Item from Message "..mailIndex..", "..attachIndex)
-			if lastmailIndex ~= mailIndex or lastattachIndex ~= attachIndex then -- don't attempt to take more than once or it generates the "database error"
-				--Postal:Print("Actually getting it")
-				lastItem = GetInboxNumItems()
-				TakeInboxItem(mailIndex, attachIndex)
-				lastmailIndex = mailIndex
-				lastattachIndex = attachIndex
-			else
-				if lastItem ~= GetInboxNumItems() then
-					mailIndex = mailIndex - 1
-					attachIndex = ATTACHMENTS_MAX_RECEIVE
-					lastItem = nil
-					return self:ProcessNext() -- tail call
-				end
+			TakeInboxItem(mailIndex, attachIndex)
+
+			lastNumAttach, lastNumGold = Postal:CountItemsAndMoney()
+			wait = true
+			-- Find next attachment index backwards
+			local attachIndex2 = attachIndex - 1
+			while not GetInboxItemLink(mailIndex, attachIndex2) and attachIndex2 > 0 do
+				attachIndex2 = attachIndex2 - 1
 			end
-			--attachIndex = attachIndex - 1
+			if attachIndex2 == 0 and msgMoney == 0 then lastItem = true end
+
 			updateFrame:Show()
 		elseif msgMoney > 0 then
 			-- No attachments, but there is money
-			if lastItem and lastItem ~= GetInboxNumItems() then
-				mailIndex = mailIndex - 1
-				attachIndex = ATTACHMENTS_MAX_RECEIVE
-				lastItem = nil
-				return self:ProcessNext() -- tail call
-			end
-			--Postal:Print("Looting Message "..mailIndex)
-			if lastmailmoneyIndex ~= mailIndex then -- don't attempt to take more than once or it generates the "database error"
-				TakeInboxMoney(mailIndex)
-				lastmailmoneyIndex = mailIndex
-				lastItem = GetInboxNumItems()
-			end
+			--Postal:Print("Getting Gold from Message "..mailIndex)
+			TakeInboxMoney(mailIndex)
+
+			lastNumAttach, lastNumGold = Postal:CountItemsAndMoney()
+			wait = true
+
 			updateFrame:Show()
 		else
-			if lastItem and lastItem ~= GetInboxNumItems() then
-				-- the last attachment or gold taken auto deleted the mail so move on to the next mail
-				mailIndex = mailIndex - 1
-				attachIndex = ATTACHMENTS_MAX_RECEIVE
-				lastItem = nil
-				return self:ProcessNext() -- tail call
-			end
+			-- Mail has no item or money, go to next mail
 			mailIndex = mailIndex - 1
 			attachIndex = ATTACHMENTS_MAX_RECEIVE
-			lastItem = nil
 			return self:ProcessNext() -- tail call
 		end
+
 	else
+		-- Reached the end of opening all selected mail
 		if IsAddOnLoaded("MrPlow") then
 			if MrPlow.DoStuff then
 				MrPlow:DoStuff("stack")
-			elseif MrPlow.ParseInventory then
+			elseif MrPlow.ParseInventory then -- Backwards compat
 				MrPlow:ParseInventory()
 			end
 		end
