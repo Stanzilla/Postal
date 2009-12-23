@@ -52,7 +52,8 @@ function Postal_BlackBook:OnEnable()
 	local db = Postal.db.profile.BlackBook
 	local exclude = bit.bor(db.AutoCompleteFriends and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_FRIEND,
 		db.AutoCompleteGuild and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_IN_GUILD)
-	Postal_BlackBook_Autocomplete_Flags.include = bit.bxor(AUTOCOMPLETE_FLAG_ALL, exclude) 
+	Postal_BlackBook_Autocomplete_Flags.include = bit.bxor(
+		db.ExcludeRandoms and (bit.bor(AUTOCOMPLETE_FLAG_FRIEND, AUTOCOMPLETE_FLAG_IN_GUILD)) or AUTOCOMPLETE_FLAG_ALL, exclude)
 	SendMailNameEditBox.autoCompleteParams = Postal_BlackBook_Autocomplete_Flags
 
 	-- For enabling after a disable
@@ -499,7 +500,8 @@ function Postal_BlackBook.SaveFriendGuildOption(dropdownbutton, arg1, arg2, chec
 	local db = Postal.db.profile.BlackBook
 	local exclude = bit.bor(db.AutoCompleteFriends and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_FRIEND,
 		db.AutoCompleteGuild and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_IN_GUILD)
-	Postal_BlackBook_Autocomplete_Flags.include = bit.bxor(AUTOCOMPLETE_FLAG_ALL, exclude) 
+	Postal_BlackBook_Autocomplete_Flags.include = bit.bxor(
+		db.ExcludeRandoms and (bit.bor(AUTOCOMPLETE_FLAG_FRIEND, AUTOCOMPLETE_FLAG_IN_GUILD)) or AUTOCOMPLETE_FLAG_ALL, exclude)
 end
 
 function Postal_BlackBook.SetAutoComplete(dropdownbutton, arg1, arg2, checked)
@@ -580,6 +582,11 @@ function Postal_BlackBook.ModuleMenu(self, level)
 			info.text = L["Guild"]
 			info.arg2 = "AutoCompleteGuild"
 			info.checked = db.AutoCompleteGuild
+			UIDropDownMenu_AddButton(info, level)
+
+			info.text = L["Exclude randoms you interacted with"]
+			info.arg2 = "ExcludeRandoms"
+			info.checked = db.ExcludeRandoms
 			UIDropDownMenu_AddButton(info, level)
 
 			info.text = L["Disable Blizzard's auto-completion popup menu"]
