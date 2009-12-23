@@ -43,6 +43,7 @@ local defaults = {
 			AutoCompleteContacts = true,
 			AutoCompleteFriends = true,
 			AutoCompleteGuild = true,
+			ExcludeRandoms = true,
 			DisableBlizzardAutoComplete = false,
 			UseAutoComplete = true,
 		},
