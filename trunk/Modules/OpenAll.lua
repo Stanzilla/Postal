@@ -114,6 +114,7 @@ function Postal_OpenAll:ProcessNext()
 				wait = false
 				mailIndex = mailIndex - 1
 				attachIndex = ATTACHMENTS_MAX_RECEIVE
+				return self:ProcessNext() -- tail call
 			elseif lastNumAttach ~= attachCount then
 				-- Process next item, an attachment has been taken
 				wait = false
@@ -123,6 +124,7 @@ function Postal_OpenAll:ProcessNext()
 					lastItem = false
 					mailIndex = mailIndex - 1
 					attachIndex = ATTACHMENTS_MAX_RECEIVE
+					return self:ProcessNext() -- tail call
 				end
 			else
 				-- Wait longer until something in the mailbox changes
