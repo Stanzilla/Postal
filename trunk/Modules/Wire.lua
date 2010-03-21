@@ -21,7 +21,8 @@ s = gsub(s, "%%d", "%%d+")
 c = gsub(c, "%%d", "%%d+")
 
 function Postal_Wire:OnEnable()
-	self:RawHook(SendMailMoney, "onValueChangedFunc", true)
+	-- Secure hook so that it calls the original function
+	self:SecureHook(SendMailMoney, "onValueChangedFunc")
 end
 
 -- Disabling modules unregisters all events/hook automatically
