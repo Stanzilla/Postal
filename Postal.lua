@@ -56,7 +56,6 @@ local defaults = {
 }
 local _G = getfenv(0)
 local t = {}
-local aboutFrame
 Postal.keepFreeOptions = {0, 1, 2, 3, 5, 10, 15, 20, 25, 30}
 
 -- Use a common frame and setup some common functions for the Postal dropdown menus
@@ -398,6 +397,7 @@ function Postal.Menu(self, level)
 end
 
 function Postal:CreateAboutFrame()
+	local aboutFrame = Postal.aboutFrame
 	if not aboutFrame and Chatter and ChatterCopyFrame then
 		aboutFrame = ChatterCopyFrame
 		aboutFrame.editBox = Chatter:GetModule("Chat Copy").editBox
@@ -417,6 +417,7 @@ function Postal:CreateAboutFrame()
 		aboutFrame:SetPoint("CENTER", UIParent, "CENTER")
 		aboutFrame:Hide()
 		aboutFrame:SetFrameStrata("DIALOG")
+		aboutFrame:SetToplevel(true)
 
 		local scrollArea = CreateFrame("ScrollFrame", "PostalAboutScroll", aboutFrame, "UIPanelScrollFrameTemplate")
 		scrollArea:SetPoint("TOPLEFT", aboutFrame, "TOPLEFT", 8, -30)
@@ -438,6 +439,7 @@ function Postal:CreateAboutFrame()
 		local close = CreateFrame("Button", nil, aboutFrame, "UIPanelCloseButton")
 		close:SetPoint("TOPRIGHT", aboutFrame, "TOPRIGHT")
 	end
+	Postal.aboutFrame = aboutFrame
 	Postal.CreateAboutFrame = nil -- Kill ourselves
 end
 
@@ -464,8 +466,8 @@ function Postal.About()
 	tinsert(t, "")
 	tinsert(t, "- Xinhuan (Blackrock US Alliance)")
 	tinsert(t, "")
-	aboutFrame.editBox:SetText(table.concat(t, "\n"))
-	aboutFrame:Show()
+	Postal.aboutFrame.editBox:SetText(table.concat(t, "\n"))
+	Postal.aboutFrame:Show()
 	wipe(t) -- For garbage collection
 end
 
