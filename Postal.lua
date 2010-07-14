@@ -541,6 +541,19 @@ function Postal:GetMoneyString(money)
 	end
 end
 
+function Postal:GetMoneyStringPlain(money)
+	local gold = floor(money / 10000)
+	local silver = floor((money - gold * 10000) / 100)
+	local copper = mod(money, 100)
+	if gold > 0 then
+		return gold..GOLD_AMOUNT_SYMBOL.." "..silver..SILVER_AMOUNT_SYMBOL.." "..copper..COPPER_AMOUNT_SYMBOL
+	elseif silver > 0 then
+		return silver..SILVER_AMOUNT_SYMBOL.." "..copper..COPPER_AMOUNT_SYMBOL
+	else
+		return copper..COPPER_AMOUNT_SYMBOL
+	end
+end
+
 function Postal:CountItemsAndMoney()
 	local numAttach = 0
 	local numGold = 0
