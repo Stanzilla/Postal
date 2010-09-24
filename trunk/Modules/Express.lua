@@ -174,6 +174,7 @@ function Postal_Express.ModuleMenu(self, level)
 	if not level then return end
 	local info = self.info
 	wipe(info)
+	info.isNotRadio = 1
 	if level == 1 + self.levelAdjust then
 		local db = Postal.db.profile.Express
 		info.keepShownOnClick = 1

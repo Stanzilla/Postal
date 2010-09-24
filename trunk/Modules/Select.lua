@@ -418,6 +418,8 @@ function Postal_Select.ModuleMenu(self, level)
 		info.value = "KeepFreeSpace"
 		info.func = self.UncheckHack
 		UIDropDownMenu_AddButton(info, level)
+		local listFrame = _G["DropDownList"..level]
+		self.UncheckHack(_G[listFrame:GetName().."Button"..listFrame.numButtons])
 
 		info.text = L["Verbose mode"]
 		info.hasArrow = nil
@@ -426,6 +428,7 @@ function Postal_Select.ModuleMenu(self, level)
 		info.arg1 = "Select"
 		info.arg2 = "SpamChat"
 		info.checked = Postal.db.profile.Select.SpamChat
+		info.isNotRadio = 1
 		UIDropDownMenu_AddButton(info, level)
 
 	elseif level == 2 + self.levelAdjust then

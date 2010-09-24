@@ -267,6 +267,7 @@ function Postal_OpenAll.ModuleMenu(self, level)
 	if not level then return end
 	local info = self.info
 	wipe(info)
+	info.isNotRadio = 1
 	local db = Postal.db.profile.OpenAll
 	
 	if level == 1 + self.levelAdjust then
@@ -361,6 +362,8 @@ function Postal_OpenAll.ModuleMenu(self, level)
 			info.value = "KeepFreeSpace"
 			info.func = self.UncheckHack
 			UIDropDownMenu_AddButton(info, level)
+			local listFrame = _G["DropDownList"..level]
+			self.UncheckHack(_G[listFrame:GetName().."Button"..listFrame.numButtons])
 
 			info.text = L["Verbose mode"]
 			info.hasArrow = nil
@@ -375,6 +378,7 @@ function Postal_OpenAll.ModuleMenu(self, level)
 		if UIDROPDOWNMENU_MENU_VALUE == "KeepFreeSpace" then
 			local keepFree = db.KeepFreeSpace
 			info.func = Postal_OpenAll.SetKeepFreeSpace
+			info.isNotRadio = nil
 			for _, v in ipairs(Postal.keepFreeOptions) do
 				info.text = v
 				info.checked = v == keepFree

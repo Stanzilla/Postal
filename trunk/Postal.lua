@@ -1,6 +1,7 @@
 ﻿local Postal = LibStub("AceAddon-3.0"):NewAddon("Postal", "AceEvent-3.0", "AceHook-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("Postal")
 _G["Postal"] = Postal
+local TOC = select(4, GetBuildInfo())
 
 -- defaults for storage
 local defaults = {
@@ -65,6 +66,9 @@ Postal_DropDownMenu.info = {}
 Postal_DropDownMenu.levelAdjust = 0
 Postal_DropDownMenu.UncheckHack = function(dropdownbutton)
 	_G[dropdownbutton:GetName().."Check"]:Hide()
+	if TOC >= 40000 then
+		_G[dropdownbutton:GetName().."UnCheck"]:Hide()
+	end
 end
 Postal_DropDownMenu.HideMenu = function()
 	if UIDROPDOWNMENU_OPEN_MENU == Postal_DropDownMenu then
@@ -139,7 +143,7 @@ function Postal:OnInitialize()
 	end
 
 	-- To fix Blizzard's bug caused by the new "self:SetFrameLevel(2);"
-	if not IsAddOnLoaded("!BlizzBugsSuck") then
+	if TOC < 40000 and not IsAddOnLoaded("!BlizzBugsSuck") then
 		hooksecurefunc("UIDropDownMenu_CreateFrames", Postal.FixMenuFrameLevels)
 	end
 
@@ -209,21 +213,35 @@ StaticPopupDialogs["POSTAL_NEW_PROFILE"] = {
 	button2 = CANCEL,
 	hasEditBox = 1,
 	maxLetters = 128,
-	hasWideEditBox = 1,
+	hasWideEditBox = 1,  -- Not needed in Cata
+	editBoxWidth = 350,  -- Needed in Cata
 	OnAccept = function(self)
-		Postal.db:SetProfile(strtrim(self.wideEditBox:GetText()))
+		if TOC < 40000 then
+			Postal.db:SetProfile(strtrim(self.wideEditBox:GetText()))
+		else
+			Postal.db:SetProfile(strtrim(self.editBox:GetText()))
+		end
 	end,
 	OnShow = function(self)
-		self.wideEditBox:SetText(Postal.db:GetCurrentProfile())
-		self.wideEditBox:SetFocus()
+		if TOC < 40000 then
+			self.wideEditBox:SetText(Postal.db:GetCurrentProfile())
+			self.wideEditBox:SetFocus()
+		else
+			self.editBox:SetText(Postal.db:GetCurrentProfile())
+			self.editBox:SetFocus()
+		end
 	end,
-	OnHide = StaticPopupDialogs["SET_GUILDMOTD"].OnHide,
+	OnHide = StaticPopupDialogs[TOC < 40000 and "SET_GUILDMOTD" or "SET_GUILDPLAYERNOTE"].OnHide,
 	EditBoxOnEnterPressed = function(self)
 		local parent = self:GetParent()
-		Postal.db:SetProfile(strtrim(parent.wideEditBox:GetText()))
+		if TOC < 40000 then
+			Postal.db:SetProfile(strtrim(parent.wideEditBox:GetText()))
+		else
+			Postal.db:SetProfile(strtrim(parent.editBox:GetText()))
+		end
 		parent:Hide()
 	end,
-	EditBoxOnEscapePressed = StaticPopupDialogs["SET_GUILDMOTD"].EditBoxOnEscapePressed,
+	EditBoxOnEscapePressed = StaticPopupDialogs[TOC < 40000 and "SET_GUILDMOTD" or "SET_GUILDPLAYERNOTE"].EditBoxOnEscapePressed,
 	timeout = 0,
 	exclusive = 1,
 	whileDead = 1,
@@ -245,6 +263,7 @@ function Postal.Menu(self, level)
 		info.notCheckable = nil
 
 		info.keepShownOnClick = 1
+		info.isNotRadio = 1
 		for name, module in Postal:IterateModules() do 
 			info.text = L[name]
 			info.func = Postal.ToggleModule
@@ -473,7 +492,7 @@ function Postal.About()
 	wipe(t) -- For garbage collection
 end
 
-if not IsAddOnLoaded("!BlizzBugsSuck") then
+if TOC < 40000 and not IsAddOnLoaded("!BlizzBugsSuck") then
 	-- To fix Blizzard's bug caused by the new "self:SetFrameLevel(2);"
 	local function FixFrameLevel(level, ...)
 		for i = 1, select("#", ...) do
