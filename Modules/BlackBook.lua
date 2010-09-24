@@ -514,7 +514,7 @@ function Postal_BlackBook.BlackBookMenu(self, level)
 
 		elseif strfind(UIDROPDOWNMENU_MENU_VALUE, "gpart") then
 			local startIndex = tonumber(strmatch(UIDROPDOWNMENU_MENU_VALUE, "gpart(%d+)")) * 25 - 24
-			local endIndex = math.min(startIndex+24, GetNumGuildMembers(true))
+			local endIndex = math.min(startIndex+24, (GetNumGuildMembers(true)))
 			for i = startIndex, endIndex do
 				local name = sorttable[i]
 				info.text = sorttable[i]
@@ -554,6 +554,7 @@ function Postal_BlackBook.ModuleMenu(self, level)
 	if not level then return end
 	local info = self.info
 	wipe(info)
+	info.isNotRadio = 1
 	if level == 1 + self.levelAdjust then
 		info.keepShownOnClick = 1
 		info.text = L["Autofill last person mailed"]
@@ -572,6 +573,8 @@ function Postal_BlackBook.ModuleMenu(self, level)
 		info.text = L["Name auto-completion options"]
 		info.value = "AutoComplete"
 		UIDropDownMenu_AddButton(info, level)
+		local listFrame = _G["DropDownList"..level]
+		self.UncheckHack(_G[listFrame:GetName().."Button"..listFrame.numButtons])
 
 	elseif level == 2 + self.levelAdjust then
 		local db = Postal.db.profile.BlackBook
