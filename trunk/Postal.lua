@@ -52,6 +52,7 @@ local defaults = {
 	global = {
 		BlackBook = {
 			alts = {},
+			realID = {},
 		},
 	},
 }
@@ -501,8 +502,8 @@ if TOC < 40000 and not IsAddOnLoaded("!BlizzBugsSuck") then
 		end
 	end
 	function Postal.FixMenuFrameLevels()
-		-- Postal only uses up to 3 levels of menus
-		for i = 1, 3 do
+		-- Postal only uses up to 4 levels of menus
+		for i = 1, 4 do
 			local f = _G["DropDownList"..i]
 			if f then
 				FixFrameLevel(f:GetFrameLevel() + 2, f:GetChildren())

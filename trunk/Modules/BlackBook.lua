@@ -49,6 +49,7 @@ function Postal_BlackBook:OnEnable()
 	self:HookScript(SendMailNameEditBox, "OnEditFocusGained")
 	self:RawHook("AutoComplete_Update", true)
 	self:RegisterEvent("MAIL_SHOW")
+	self:RegisterEvent("BN_FRIEND_INFO_CHANGED")
 
 	local db = Postal.db.profile.BlackBook
 	local exclude = bit.bor(db.AutoCompleteFriends and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_FRIEND,
@@ -79,6 +80,49 @@ function Postal_BlackBook:Reset(event)
 	self:UnregisterEvent("PLAYER_LEAVING_WORLD")
 end
 
+function Postal_BlackBook:BN_FRIEND_INFO_CHANGED(presenceID)
+	local numBNetTotal, numBNetOnline = BNGetNumFriends()
+	for i = 1, numBNetOnline do
+		local presenceID, givenName, surname, toonName, toonID, client, isOnline, lastOnline, isAFK, isDND, broadcastText, noteText, isFriend, broadcastTime = BNGetFriendInfo(i)
+		if givenName and surname and toonID then
+			--nameText = format(BATTLENET_NAME_FORMAT, givenName, surname);
+			local hasFocus, toonName, client, realmName, faction, race, class, guild, zoneName, level, gameText = BNGetToonInfo(toonID)
+			if client == BNET_CLIENT_WOW then
+				-- Convert data to non-localized form
+				for token, loc_male in pairs(LOCALIZED_CLASS_NAMES_MALE) do
+					if loc_male == class then class = token end
+				end
+				for token, loc_female in pairs(LOCALIZED_CLASS_NAMES_FEMALE) do
+					if loc_female == class then class = token end
+				end
+				faction = PLAYER_FACTION_GROUP[faction]
+				-- Insert the toon into our global db
+				local nameStr = givenName.."|"..surname
+				local toonStr = ("%s|%s|%s|%s|%s"):format(toonName, realmName, faction, level, class)
+				local db = Postal.db.global.BlackBook.realID
+				db[nameStr] = db[nameStr] or {}
+				db = db[nameStr]
+				local flag = true
+				for i = 1, #db do
+					local n, r, f, l, c = strsplit("|", db[i])
+					if n == toonName and r == realmName then
+						if f == faction and l == level and c == class then
+							flag = false
+						else
+							tremove(db, i)
+						end
+						break
+					end
+				end
+				if flag then
+					tinsert(db, toonStr)
+					table.sort(db)
+				end
+			end
+		end
+	end
+end
+
 -- We do this once on MAIL_SHOW because UnitFactionGroup() is only valid after
 -- PLAYER_ENTERING_WORLD and because Postal might be LoD due to AddOnLoader
 -- and PLAYER_ENTERING_WORLD won't fire in that scenerio.
@@ -86,17 +130,18 @@ function Postal_BlackBook:AddAlt()
 	local realm = GetRealmName()
 	local faction = UnitFactionGroup("player")
 	local player = UnitName("player")
-	local namestring = UnitName("player").."|"..GetRealmName().."|"..UnitFactionGroup("player")
+	local level = UnitLevel("player")
+	local _, class = UnitClass("player")
+	local namestring = ("%s|%s|%s|%s|%s"):format(player, realm, faction, level, class)
 	local flag = true
 	local db = Postal.db.global.BlackBook.alts
-	for i = 1, #db do
-		if namestring == db[i] then
-			flag = false
-		else
-			local p, r, f = strsplit("|", db[i])
-			if r == realm and f == faction and p ~= player then
-				enableAltsMenu = true
-			end
+	for i = #db, 1, -1 do
+		local p, r, f, l, c = strsplit("|", db[i])
+		if p == player and r == realm and f == faction then
+			tremove(db, i)
+		end
+		if p ~= player and r == realm and f == faction then
+			enableAltsMenu = true
 		end
 	end
 	if flag then
@@ -261,6 +306,25 @@ function Postal_BlackBook.RemoveContact(dropdownbutton, arg1, arg2, checked)
 	end
 end
 
+function Postal_BlackBook.DeleteRealIDChar(dropdownbutton, arg1, arg2, checked)
+	local db = Postal.db.global.BlackBook.realID[arg1]
+	for k = 1, #db do
+		if arg2 == db[k] then
+			tremove(db, k)
+			if #db == 0 then
+				Postal.db.global.BlackBook.realID[arg1] = nil
+			end
+			return
+		end
+	end
+end
+
+function Postal_BlackBook.RealNameSort(a, b)
+	local nameA = strupper(format(BATTLENET_NAME_FORMAT, strsplit("|", a)))
+	local nameB = strupper(format(BATTLENET_NAME_FORMAT, strsplit("|", b)))
+	return nameA < nameB
+end
+
 function Postal_BlackBook.BlackBookMenu(self, level)
 	if not level then return end
 	local info = self.info
@@ -318,6 +382,11 @@ function Postal_BlackBook.BlackBookMenu(self, level)
 		info.value = "alt"
 		UIDropDownMenu_AddButton(info, level)
 
+		info.disabled = (not BNGetNumFriends) or (BNGetNumFriends() == 0)
+		info.text = BATTLENET_FRIEND.." "..L["Friends"]
+		info.value = "friendRealID"
+		UIDropDownMenu_AddButton(info, level)
+
 		info.disabled = GetNumFriends() == 0
 		info.text = L["Friends"]
 		info.value = "friend"
@@ -370,9 +439,14 @@ function Postal_BlackBook.BlackBookMenu(self, level)
 			local player = UnitName("player")
 			info.notCheckable = 1
 			for i = 1, #db do
-				local p, r, f = strsplit("|", db[i])
+				local p, r, f, l, c = strsplit("|", db[i])
 				if r == realm and f == faction and p ~= player then
-					info.text = p
+					if l and c then
+						local clr = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[c] or RAID_CLASS_COLORS[c]
+						info.text = format("%s |cff%.2x%.2x%.2x(%d %s)|r", p, clr.r*255, clr.g*255, clr.b*255, l, LOCALIZED_CLASS_NAMES_MALE[c])
+					else
+						info.text = p
+					end
 					info.func = Postal_BlackBook.SetSendMailName
 					info.arg1 = p
 					UIDropDownMenu_AddButton(info, level)
@@ -393,6 +467,55 @@ function Postal_BlackBook.BlackBookMenu(self, level)
 			info.value = "deletealt"
 			UIDropDownMenu_AddButton(info, level)
 
+		elseif UIDROPDOWNMENU_MENU_VALUE == "friendRealID" then
+			-- Friends list (RealID)
+			local db = Postal.db.global.BlackBook.realID
+			local realm = GetRealmName()
+			local faction = UnitFactionGroup("player")
+			local numFriends = 0
+			-- For each friend
+			for realName, charList in pairs(db) do
+				-- For each char, see if it matches the same realm and faction
+				for i = 1, #charList do
+					local n, r, f, l, c = strsplit("|", charList[i])
+					if realm == r and faction == f then
+						numFriends = numFriends + 1
+						sorttable[numFriends] = realName
+						break  -- Just add each friend once
+					end
+				end
+			end
+
+			-- Sort the list
+			if numFriends == 0 then return end
+			for i = #sorttable, numFriends+1, -1 do
+				sorttable[i] = nil
+			end
+			if not ignoresortlocale[GetLocale()] then table.sort(sorttable, Postal_BlackBook.RealNameSort) end
+
+			-- Store upvalue
+			numFriendsOnList = numFriends
+
+			info.hasArrow = 1
+			info.keepShownOnClick = 1
+			info.func = self.UncheckHack
+			-- 25 or less, don't need multi level menus
+			if numFriends > 0 and numFriends <= 25 then
+				for i = 1, numFriends do
+					local name = sorttable[i]
+					info.text = format(BATTLENET_NAME_FORMAT, strsplit("|", name))
+					info.value = "frname"..i
+					UIDropDownMenu_AddButton(info, level)
+				end
+			elseif numFriends > 25 then
+				-- More than 25 people, split the list into multiple sublists of 25
+				for i = 1, math.ceil(numFriends/25) do
+					info.text  = L["Part %d"]:format(i)
+					info.value = "frpart"..i
+					UIDropDownMenu_AddButton(info, level)
+				end
+			end
+		
 		elseif UIDROPDOWNMENU_MENU_VALUE == "friend" then
 			-- Friends list
 			local numFriends = GetNumFriends()
@@ -453,12 +576,14 @@ function Postal_BlackBook.BlackBookMenu(self, level)
 					UIDropDownMenu_AddButton(info, level)
 				end
 			end
+
 		elseif UIDROPDOWNMENU_MENU_VALUE == "guild" then
 			if not IsInGuild() then return end
 			local numFriends = GetNumGuildMembers(true)
 			for i = 1, numFriends do
-				local name, rank = GetGuildRosterInfo(i)
-				sorttable[i] = name.." |cffffd200("..rank..")|r"
+				local name, rank, rankIndex, level, class, zone, note, officernote, online, status, classFileName = GetGuildRosterInfo(i)
+				local c = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[classFileName] or RAID_CLASS_COLORS[classFileName]
+				sorttable[i] = format("%s |cffffd200(%s)|r |cff%.2x%.2x%.2x(%d %s)|r", name, rank, c.r*255, c.g*255, c.b*255, level, class)
 			end
 			for i = #sorttable, numFriends+1, -1 do
 				sorttable[i] = nil
@@ -484,7 +609,7 @@ function Postal_BlackBook.BlackBookMenu(self, level)
 			end
 		end
 
-	elseif level == 3 then
+	elseif level >= 3 then
 		info.notCheckable = 1
 		if UIDROPDOWNMENU_MENU_VALUE == "deletealt" then
 			local db = Postal.db.global.BlackBook.alts
@@ -492,13 +617,81 @@ function Postal_BlackBook.BlackBookMenu(self, level)
 			local faction = UnitFactionGroup("player")
 			local player = UnitName("player")
 			for i = 1, #db do
-				local p, r, f = strsplit("|", db[i])
+				local p, r, f, l, c = strsplit("|", db[i])
 				if r == realm and f == faction and p ~= player then
-					info.text = p
+					if l and c then
+						local clr = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[c] or RAID_CLASS_COLORS[c]
+						info.text = format("%s |cff%.2x%.2x%.2x(%d %s)|r", p, clr.r*255, clr.g*255, clr.b*255, l, LOCALIZED_CLASS_NAMES_MALE[c])
+					else
+						info.text = p
+					end
 					info.func = Postal_BlackBook.DeleteAlt
 					info.arg1 = db[i]
 					UIDropDownMenu_AddButton(info, level)
 				end
+			end
+
+		elseif strfind(UIDROPDOWNMENU_MENU_VALUE, "deleterealidchar") then
+			local index = tonumber(strmatch(UIDROPDOWNMENU_MENU_VALUE, "deleterealidchar(%d+)"))
+			local name = sorttable[index]
+			local db = Postal.db.global.BlackBook.realID[name]
+			local realm = GetRealmName()
+			local faction = UnitFactionGroup("player")
+			for i = 1, #db do
+				local n, r, f, l, c = strsplit("|", db[i])
+				if realm == r and faction == f then
+					local clr = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[c] or RAID_CLASS_COLORS[c]
+					info.text = format("%s |cff%.2x%.2x%.2x(%d %s)|r", n, clr.r*255, clr.g*255, clr.b*255, l, LOCALIZED_CLASS_NAMES_MALE[c])
+					info.func = Postal_BlackBook.DeleteRealIDChar
+					info.arg1 = name
+					info.arg2 = db[i]
+					UIDropDownMenu_AddButton(info, level)
+				end
+			end
+
+		elseif strfind(UIDROPDOWNMENU_MENU_VALUE, "frname") then
+			local index = tonumber(strmatch(UIDROPDOWNMENU_MENU_VALUE, "frname(%d+)"))
+			local name = sorttable[index]
+			local db = Postal.db.global.BlackBook.realID[name]
+			local realm = GetRealmName()
+			local faction = UnitFactionGroup("player")
+			for i = 1, #db do
+				local n, r, f, l, c = strsplit("|", db[i])
+				if realm == r and faction == f then
+					local clr = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[c] or RAID_CLASS_COLORS[c]
+					info.text = format("%s |cff%.2x%.2x%.2x(%d %s)|r", n, clr.r*255, clr.g*255, clr.b*255, l, LOCALIZED_CLASS_NAMES_MALE[c])
+					info.func = Postal_BlackBook.SetSendMailName
+					info.arg1 = n
+					UIDropDownMenu_AddButton(info, level)
+				end
+			end
+
+			info.disabled = 1
+			info.text = nil
+			info.func = nil
+			info.arg1 = nil
+			UIDropDownMenu_AddButton(info, level)
+			info.disabled = nil
+
+			info.text = L["Delete"]
+			info.hasArrow = 1
+			info.keepShownOnClick = 1
+			info.func = self.UncheckHack
+			info.value = "deleterealidchar"..index
+			UIDropDownMenu_AddButton(info, level)
+
+		elseif strfind(UIDROPDOWNMENU_MENU_VALUE, "frpart") then
+			info.hasArrow = 1
+			info.keepShownOnClick = 1
+			info.func = self.UncheckHack
+
+			local startIndex = tonumber(strmatch(UIDROPDOWNMENU_MENU_VALUE, "frpart(%d+)")) * 25 - 24
+			local endIndex = math.min(startIndex+24, numFriendsOnList)
+			for i = startIndex, endIndex do
+				local name = sorttable[i]
+				info.text = format(BATTLENET_NAME_FORMAT, strsplit("|", name))
+				info.value = "frname"..i
+				UIDropDownMenu_AddButton(info, level)
 			end
 
 		elseif strfind(UIDROPDOWNMENU_MENU_VALUE, "fpart") then
