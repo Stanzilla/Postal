@@ -73,6 +73,7 @@ function Postal_BlackBook:MAIL_SHOW()
 	self:RegisterEvent("MAIL_CLOSED", "Reset")
 	self:RegisterEvent("PLAYER_LEAVING_WORLD", "Reset")
 	if self.AddAlt then self:AddAlt() end
+	self:BN_FRIEND_INFO_CHANGED()
 end
 
 function Postal_BlackBook:Reset(event)
@@ -85,7 +86,6 @@ function Postal_BlackBook:BN_FRIEND_INFO_CHANGED(presenceID)
 	for i = 1, numBNetOnline do
 		local presenceID, givenName, surname, toonName, toonID, client, isOnline, lastOnline, isAFK, isDND, broadcastText, noteText, isFriend, broadcastTime = BNGetFriendInfo(i)
 		if givenName and surname and toonID then
-			--nameText = format(BATTLENET_NAME_FORMAT, givenName, surname);
 			local hasFocus, toonName, client, realmName, faction, race, class, guild, zoneName, level, gameText = BNGetToonInfo(toonID)
 			if client == BNET_CLIENT_WOW then
 				-- Convert data to non-localized form
@@ -135,6 +135,7 @@ function Postal_BlackBook:AddAlt()
 	local namestring = ("%s|%s|%s|%s|%s"):format(player, realm, faction, level, class)
 	local flag = true
 	local db = Postal.db.global.BlackBook.alts
+	enableAltsMenu = false
 	for i = #db, 1, -1 do
 		local p, r, f, l, c = strsplit("|", db[i])
 		if p == player and r == realm and f == faction then
@@ -325,11 +326,18 @@ end
 
 function Postal_BlackBook.DeleteRealIDChar(dropdownbutton, arg1, arg2, checked)
 	local db = Postal.db.global.BlackBook.realID[arg1]
+	local i, j = string.match(dropdownbutton:GetName(), "DropDownList(%d+)Button(%d+)")
 	for k = 1, #db do
 		if arg2 == db[k] then
 			tremove(db, k)
 			if #db == 0 then
 				Postal.db.global.BlackBook.realID[arg1] = nil
+				CloseDropDownMenus(i-2)
+			else
+				CloseDropDownMenus(i-1)
+			end
+			if Postal_BlackBook:CountRealIDFriends() == 0 then
+				CloseDropDownMenus()
 			end
 			return
 		end
@@ -340,6 +348,25 @@ function Postal_BlackBook.RealNameSort(a, b)
 	local nameA = strupper(format(BATTLENET_NAME_FORMAT, strsplit("|", a)))
 	local nameB = strupper(format(BATTLENET_NAME_FORMAT, strsplit("|", b)))
 	return nameA < nameB
+end
+
+function Postal_BlackBook:CountRealIDFriends()
+	local db = Postal.db.global.BlackBook.realID
+	local realm = GetRealmName()
+	local faction = UnitFactionGroup("player")
+	local numFriends = 0
+	-- For each friend
+	for realName, charList in pairs(db) do
+		-- For each char, see if it matches the same realm and faction
+		for i = 1, #charList do
+			local n, r, f, l, c = strsplit("|", charList[i])
+			if realm == r and faction == f then
+				numFriends = numFriends + 1
+				break  -- Just count each friend once
+			end
+		end
+	end
+	return numFriends
 end
 
 function Postal_BlackBook.BlackBookMenu(self, level)
@@ -399,7 +426,7 @@ function Postal_BlackBook.BlackBookMenu(self, level)
 		info.value = "alt"
 		UIDropDownMenu_AddButton(info, level)
 
-		info.disabled = (not BNGetNumFriends) or (BNGetNumFriends() == 0)
+		info.disabled = (not BNGetNumFriends) or (Postal_BlackBook:CountRealIDFriends() == 0)
 		info.text = BATTLENET_FRIEND.." "..L["Friends"]
 		info.value = "friendRealID"
 		UIDropDownMenu_AddButton(info, level)
