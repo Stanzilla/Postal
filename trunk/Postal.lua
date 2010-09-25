@@ -42,6 +42,7 @@ local defaults = {
 			AutoCompleteAlts = true,
 			AutoCompleteRecent = true,
 			AutoCompleteContacts = true,
+			AutoCompleteRealIDFriends = true,
 			AutoCompleteFriends = true,
 			AutoCompleteGuild = true,
 			ExcludeRandoms = true,

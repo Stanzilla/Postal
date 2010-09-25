@@ -13,7 +13,7 @@ local ignoresortlocale = {
 	["zhCN"] = true,
 	["zhTW"] = true,
 }
-local enableAltsMenu
+local enableAltsMenu = true
 local Postal_BlackBook_Autocomplete_Flags = {
 	include = AUTOCOMPLETE_FLAG_ALL,
 	exclude = AUTOCOMPLETE_FLAG_NONE,
@@ -226,14 +226,14 @@ function Postal_BlackBook:OnChar(editbox, ...)
 	local db = Postal.db.profile.BlackBook
 	local text = strupper(editbox:GetText())
 	local textlen = strlen(text)
+	local realm = GetRealmName()
+	local faction = UnitFactionGroup("player")
+	local player = UnitName("player")
 	local newname
 
 	-- Check alt list
 	if db.AutoCompleteAlts then
 		local db = Postal.db.global.BlackBook.alts
-		local realm = GetRealmName()
-		local faction = UnitFactionGroup("player")
-		local player = UnitName("player")
 		for i = 1, #db do
 			local p, r, f = strsplit("|", db[i])
 			if r == realm and f == faction and p ~= player then
@@ -266,6 +266,23 @@ function Postal_BlackBook:OnChar(editbox, ...)
 				newname = name
 				break
 			end
+		end
+	end
+
+	-- Check Real ID friends list
+	if not newname and db.AutoCompleteRealIDFriends then
+		local db2 = Postal.db.global.BlackBook.realID
+		for realname, charList in pairs(db2) do
+			for j = 1, #charList do
+				local p, r, f, l, c = strsplit("|", charList[j])
+				if r == realm and f == faction and p ~= player then
+					if strfind(strupper(p), text, 1, 1) == 1 then
+						newname = p
+						break
+					end
+				end
+			end
+			if newname then break end
 		end
 	end
 
@@ -797,6 +814,12 @@ function Postal_BlackBook.ModuleMenu(self, level)
 			info.text = L["Contacts"]
 			info.arg2 = "AutoCompleteContacts"
 			info.checked = db.AutoCompleteContacts
+			UIDropDownMenu_AddButton(info, level)
+
+			info.text = BATTLENET_FRIEND.." "..L["Friends"]
+			info.arg2 = "AutoCompleteRealIDFriends"
+			info.checked = db.AutoCompleteRealIDFriends
+			info.func = Postal_BlackBook.SaveFriendGuildOption
 			UIDropDownMenu_AddButton(info, level)
 
 			info.disabled = nil
