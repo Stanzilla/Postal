@@ -9,6 +9,7 @@ Postal_OpenAll.description2 = L[ [[|cFFFFCC00*|r Simple filters are available fo
 |cFFFFCC00*|r Disable the Verbose option to stop the chat spam while opening mail.]] ]
 
 local mailIndex, attachIndex
+--origNumItems, origTotalItems
 local lastItem, lastNumAttach, lastNumGold
 local wait
 local button
@@ -17,6 +18,7 @@ local skipFlag
 local invFull
 local openAllOverride
 
+-- Frame to process opening mail
 local updateFrame = CreateFrame("Frame")
 updateFrame:Hide()
 updateFrame:SetScript("OnShow", function(self)
@@ -27,6 +29,30 @@ updateFrame:SetScript("OnUpdate", function(self, elapsed)
 	if self.time <= 0 then
 		self:Hide()
 		Postal_OpenAll:ProcessNext()
+	end
+end)
+
+-- Frame to refresh the Inbox
+-- I'm cheap so instead of trying to track 60 or so seconds since the
+-- last CheckInbox(), I just call CheckInbox() every 5 seconds
+refreshFrame = CreateFrame("Frame", nil, MailFrame)
+refreshFrame:Hide()
+refreshFrame:SetScript("OnShow", function(self)
+	self.time = 5
+end)
+refreshFrame:SetScript("OnUpdate", function(self, elapsed)
+	self.time = self.time - elapsed
+	if self.time <= 0 then
+		self.time = 5
+		Postal:Print("Refreshing mailbox...")
+		CheckInbox()
+		local current, total = GetInboxNumItems()
+		if current == 50 or current == total then
+			-- If we're here, then mailbox contains a full
+			-- 50 we're showing all the mail, continue open all
+			self:Hide()
+			Postal_OpenAll:OpenAll()
+		end
 	end
 end)
 
@@ -84,7 +110,10 @@ function Postal_OpenAll:MAIL_SHOW()
 end
 
 function Postal_OpenAll:OpenAll()
-	mailIndex = GetInboxNumItems() or 0
+	refreshFrame:Hide()
+	-- Get mail counts
+	origNumItems, origTotalItems = GetInboxNumItems()
+	mailIndex = origNumItems
 	attachIndex = ATTACHMENTS_MAX_RECEIVE
 	invFull = nil
 	skipFlag = false
@@ -225,6 +254,18 @@ function Postal_OpenAll:ProcessNext()
 
 	else
 		-- Reached the end of opening all selected mail
+
+		-- If the numbers are different from previously
+		local numItems, totalItems = GetInboxNumItems()
+		if origNumItems ~= numItems or origTotalItems ~= totalItems then
+			-- We only want to refresh if there's more items to show
+			if (totalItems > numItems and numItems < 50) or (origTotalItems > origNumItems) then
+				Postal:Print("Not all messages are shown, refreshing mailbox soon to continue Open All...")
+				refreshFrame:Show()
+				return
+			end
+		end
+
 		if IsAddOnLoaded("MrPlow") then
 			if MrPlow.DoStuff then
 				MrPlow:DoStuff("stack")
@@ -238,6 +279,7 @@ function Postal_OpenAll:ProcessNext()
 end
 
 function Postal_OpenAll:Reset(event)
+	refreshFrame:Hide()
 	updateFrame:Hide()
 	self:UnregisterEvent("UI_ERROR_MESSAGE")
 	button:SetText(L["Open All"])
