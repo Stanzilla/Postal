@@ -1,5 +1,6 @@
 ## Interface: 30300
-## Version: 3.3.2
+## X-Compatible-With: 40000
+## Version: 3.4.0
 ## Title: Postal
 ## Author: Xinhuan
 ## X-Credits: Ammo, Rabbit, Grennon, Mikk
@@ -10,7 +11,7 @@
 ## Notes-esES: Postal: soporte mejorado para el buzon
 ## Notes-zhTW: Postal: 強化信箱功能。
 ## Notes-zhCN: Postal: 增强信箱功能
-## OptionalDeps: Ace3, !BlizzBugsSuck
+## OptionalDeps: Ace3, !BlizzBugsSuck, !ClassColors
 ## SavedVariables: Postal3DB
 
 ## LoadManagers: AddonLoader
@@ -30,6 +31,7 @@ Libs\AceLocale-3.0\AceLocale-3.0.xml
 Localization.lua
 Postal.lua
 
+# Users can comment out any module (or delete the .lua) of any module they do not wish to load
 Modules\Express.lua
 Modules\OpenAll.lua
 Modules\Wire.lua
