@@ -44,7 +44,7 @@ refreshFrame:SetScript("OnUpdate", function(self, elapsed)
 	self.time = self.time - elapsed
 	if self.time <= 0 then
 		self.time = 10
-		Postal:Print("Refreshing mailbox...")
+		Postal:Print(L["Refreshing mailbox..."])
 		CheckInbox()
 		local current, total = GetInboxNumItems()
 		if current == 50 or current == total then
@@ -262,7 +262,7 @@ function Postal_OpenAll:ProcessNext()
 		if origNumItems ~= numItems or origTotalItems ~= totalItems then
 			-- We only want to refresh if there's more items to show
 			if (totalItems > numItems and numItems < 50) or (origTotalItems > origNumItems) then
-				Postal:Print("Not all messages are shown, refreshing mailbox soon to continue Open All...")
+				Postal:Print(L["Not all messages are shown, refreshing mailbox soon to continue Open All..."])
 				refreshFrame:Show()
 				return
 			end
