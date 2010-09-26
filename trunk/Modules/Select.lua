@@ -253,8 +253,10 @@ function Postal_Select:ProcessNext()
 
 			-- Print message on next mail
 			if Postal.db.profile.Select.SpamChat and attachIndex == ATTACHMENTS_MAX_RECEIVE then
-				local moneyString = msgMoney > 0 and " ["..Postal:GetMoneyString(msgMoney).."]" or ""
-				Postal:Print(format("%s %d: %s%s", L["Open"], mailIndex, msgSubject or "", moneyString))
+				if not invFull or msgMoney > 0 then
+					local moneyString = msgMoney > 0 and " ["..Postal:GetMoneyString(msgMoney).."]" or ""
+					Postal:Print(format("%s %d: %s%s", L["Open"], mailIndex, msgSubject or "", moneyString))
+				end
 			end
 
 			-- Skip mail if it contains a CoD or if its from a GM
