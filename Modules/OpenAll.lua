@@ -9,7 +9,7 @@ Postal_OpenAll.description2 = L[ [[|cFFFFCC00*|r Simple filters are available fo
 |cFFFFCC00*|r Disable the Verbose option to stop the chat spam while opening mail.]] ]
 
 local mailIndex, attachIndex
---origNumItems, origTotalItems
+local origNumItems, origTotalItems
 local lastItem, lastNumAttach, lastNumGold
 local wait
 local button
@@ -34,24 +34,24 @@ end)
 
 -- Frame to refresh the Inbox
 -- I'm cheap so instead of trying to track 60 or so seconds since the
--- last CheckInbox(), I just call CheckInbox() every 5 seconds
-refreshFrame = CreateFrame("Frame", nil, MailFrame)
+-- last CheckInbox(), I just call CheckInbox() every 10 seconds
+local refreshFrame = CreateFrame("Frame", nil, MailFrame)
 refreshFrame:Hide()
 refreshFrame:SetScript("OnShow", function(self)
-	self.time = 5
+	self.time = 10
 end)
 refreshFrame:SetScript("OnUpdate", function(self, elapsed)
 	self.time = self.time - elapsed
 	if self.time <= 0 then
-		self.time = 5
+		self.time = 10
 		Postal:Print("Refreshing mailbox...")
 		CheckInbox()
 		local current, total = GetInboxNumItems()
 		if current == 50 or current == total then
-			-- If we're here, then mailbox contains a full
-			-- 50 we're showing all the mail, continue open all
+			-- If we're here, then mailbox contains a full fresh 50 or
+			-- we're showing all the mail we have, so continue open all
 			self:Hide()
-			Postal_OpenAll:OpenAll()
+			Postal_OpenAll:OpenAll(true)
 		end
 	end
 end)
@@ -109,7 +109,7 @@ function Postal_OpenAll:MAIL_SHOW()
 	self:RegisterEvent("PLAYER_LEAVING_WORLD", "Reset")
 end
 
-function Postal_OpenAll:OpenAll()
+function Postal_OpenAll:OpenAll(isRecursive)
 	refreshFrame:Hide()
 	-- Get mail counts
 	origNumItems, origTotalItems = GetInboxNumItems()
@@ -121,7 +121,7 @@ function Postal_OpenAll:OpenAll()
 	lastNumAttach = nil
 	lastNumGold = nil
 	wait = false
-	openAllOverride = IsShiftKeyDown()
+	if not isRecursive then openAllOverride = IsShiftKeyDown() end
 	if mailIndex == 0 then
 		return
 	end
@@ -197,8 +197,10 @@ function Postal_OpenAll:ProcessNext()
 
 		-- Print message on next mail
 		if Postal.db.profile.OpenAll.SpamChat and attachIndex == ATTACHMENTS_MAX_RECEIVE then
-			local moneyString = msgMoney > 0 and " ["..Postal:GetMoneyString(msgMoney).."]" or ""
-			Postal:Print(format("%s %d: %s%s", L["Processing Message"], mailIndex, msgSubject or "", moneyString))
+			if not invFull or msgMoney > 0 then
+				local moneyString = msgMoney > 0 and " ["..Postal:GetMoneyString(msgMoney).."]" or ""
+				Postal:Print(format("%s %d: %s%s", L["Processing Message"], mailIndex, msgSubject or "", moneyString))
+			end
 		end
 
 		-- Find next attachment index backwards
