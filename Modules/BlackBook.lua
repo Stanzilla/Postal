@@ -90,33 +90,42 @@ function Postal_BlackBook:BN_FRIEND_INFO_CHANGED(presenceID)
 			if client == BNET_CLIENT_WOW then
 				-- Convert data to non-localized form
 				for token, loc_male in pairs(LOCALIZED_CLASS_NAMES_MALE) do
-					if loc_male == class then class = token end
-				end
-				for token, loc_female in pairs(LOCALIZED_CLASS_NAMES_FEMALE) do
-					if loc_female == class then class = token end
-				end
-				faction = PLAYER_FACTION_GROUP[faction]
-				-- Insert the toon into our global db
-				local nameStr = givenName.."|"..surname
-				local toonStr = ("%s|%s|%s|%s|%s"):format(toonName, realmName, faction, level, class)
-				local db = Postal.db.global.BlackBook.realID
-				db[nameStr] = db[nameStr] or {}
-				db = db[nameStr]
-				local flag = true
-				for i = 1, #db do
-					local n, r, f, l, c = strsplit("|", db[i])
-					if n == toonName and r == realmName then
-						if f == faction and l == level and c == class then
-							flag = false
-						else
-							tremove(db, i)
-						end
+					if loc_male == class then
+						class = token
 						break
 					end
 				end
-				if flag then
-					tinsert(db, toonStr)
-					table.sort(db)
+				for token, loc_female in pairs(LOCALIZED_CLASS_NAMES_FEMALE) do
+					if loc_female == class then
+						class = token
+						break
+					end
+				end
+				faction = PLAYER_FACTION_GROUP[faction]
+				-- Add nil checks because some people get nil errors
+				if toonName and realmName and faction and level and class then
+					-- Insert the toon into our global db
+					local nameStr = givenName.."|"..surname
+					local toonStr = ("%s|%s|%s|%s|%s"):format(toonName, realmName, faction, level, class)
+					local db = Postal.db.global.BlackBook.realID
+					db[nameStr] = db[nameStr] or {}
+					db = db[nameStr]
+					local flag = true
+					for i = 1, #db do
+						local n, r, f, l, c = strsplit("|", db[i])
+						if n == toonName and r == realmName then
+							if f == faction and l == level and c == class then
+								flag = false
+							else
+								tremove(db, i)
+							end
+							break
+						end
+					end
+					if flag then
+						tinsert(db, toonStr)
+						table.sort(db)
+					end
 				end
 			end
 		end
