@@ -26,11 +26,12 @@ local updateFrame = CreateFrame("Frame")
 updateFrame:Hide()
 updateFrame:SetScript("OnShow", function(self)
 	self.time = Postal.db.profile.OpenSpeed
-	if invAlmostFull and self.time < 1.0 then
+	if invAlmostFull and self.time < 1.0 and not self.lootingMoney then
 		-- Delay opening to 1 second to account for a nearly full
 		-- inventory to respect the KeepFreeSpace setting
 		self.time = 1.0
 	end
+	self.lootingMoney = nil
 end)
 updateFrame:SetScript("OnUpdate", function(self, elapsed)
 	self.time = self.time - elapsed
@@ -316,6 +317,7 @@ function Postal_Select:ProcessNext()
 				lastNumAttach, lastNumGold = Postal:CountItemsAndMoney()
 				wait = true
 
+				updateFrame.lootingMoney = true
 				updateFrame:Show()
 			else
 				-- Mail has no item or money, go to next mail
