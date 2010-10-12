@@ -292,7 +292,7 @@ function Postal_Select:ProcessNext()
 					invFull = true
 					invAlmostFull = nil
 					Postal:Print(format(L["Not taking more items as there are now only %d regular bagslots free."], free))
-				elseif free <= Postal.db.profile.OpenAll.KeepFreeSpace + 1 then
+				elseif free <= Postal.db.profile.Select.KeepFreeSpace + 1 then
 					invAlmostFull = true
 				end
 			end
