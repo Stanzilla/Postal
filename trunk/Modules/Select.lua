@@ -19,13 +19,18 @@ local mailIndex, attachIndex
 local lastItem, lastNumAttach, lastNumGold
 local wait
 local skipFlag
-local invFull
+local invFull, invAlmostFull
 local lastCheck
 
 local updateFrame = CreateFrame("Frame")
 updateFrame:Hide()
 updateFrame:SetScript("OnShow", function(self)
 	self.time = Postal.db.profile.OpenSpeed
+	if invAlmostFull and self.time < 1.0 then
+		-- Delay opening to 1 second to account for a nearly full
+		-- inventory to respect the KeepFreeSpace setting
+		self.time = 1.0
+	end
 end)
 updateFrame:SetScript("OnUpdate", function(self, elapsed)
 	self.time = self.time - elapsed

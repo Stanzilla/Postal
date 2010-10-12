@@ -15,7 +15,7 @@ local wait
 local button
 local Postal_OpenAllMenuButton
 local skipFlag
-local invFull
+local invFull, invAlmostFull
 local openAllOverride
 
 -- Frame to process opening mail
@@ -23,6 +23,11 @@ local updateFrame = CreateFrame("Frame")
 updateFrame:Hide()
 updateFrame:SetScript("OnShow", function(self)
 	self.time = Postal.db.profile.OpenSpeed
+	if invAlmostFull and self.time < 1.0 then
+		-- Delay opening to 1 second to account for a nearly full
+		-- inventory to respect the KeepFreeSpace setting
+		self.time = 1.0
+	end
 end)
 updateFrame:SetScript("OnUpdate", function(self, elapsed)
 	self.time = self.time - elapsed
@@ -116,6 +121,7 @@ function Postal_OpenAll:OpenAll(isRecursive)
 	mailIndex = origNumItems
 	attachIndex = ATTACHMENTS_MAX_RECEIVE
 	invFull = nil
+	invAlmostFull = nil
 	skipFlag = false
 	lastItem = false
 	lastNumAttach = nil
@@ -220,6 +226,9 @@ function Postal_OpenAll:ProcessNext()
 			if free <= Postal.db.profile.OpenAll.KeepFreeSpace then
 				invFull = true
 				Postal:Print(format(L["Not taking more items as there are now only %d regular bagslots free."], free))
+			end
+			if free <= Postal.db.profile.OpenAll.KeepFreeSpace + 1 then
+				invAlmostFull = true
 			end
 		end
 
