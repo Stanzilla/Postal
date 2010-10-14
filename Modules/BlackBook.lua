@@ -50,6 +50,7 @@ function Postal_BlackBook:OnEnable()
 	self:RawHook("AutoComplete_Update", true)
 	self:RegisterEvent("MAIL_SHOW")
 	self:RegisterEvent("BN_FRIEND_INFO_CHANGED")
+	self:RegisterEvent("PLAYER_ENTERING_WORLD", "AddAlt")
 
 	local db = Postal.db.profile.BlackBook
 	local exclude = bit.bor(db.AutoCompleteFriends and AUTOCOMPLETE_FLAG_NONE or AUTOCOMPLETE_FLAG_FRIEND,
@@ -141,6 +142,7 @@ function Postal_BlackBook:AddAlt()
 	local player = UnitName("player")
 	local level = UnitLevel("player")
 	local _, class = UnitClass("player")
+	if not realm or not faction or not player or not level or not class then return end
 	local namestring = ("%s|%s|%s|%s|%s"):format(player, realm, faction, level, class)
 	local flag = true
 	local db = Postal.db.global.BlackBook.alts
@@ -158,6 +160,7 @@ function Postal_BlackBook:AddAlt()
 		tinsert(db, namestring)
 		table.sort(db)
 	end
+	self:UnregisterEvent("PLAYER_ENTERING_WORLD")
 	self.AddAlt = nil -- Kill ourselves so we only run it once
 end
 
