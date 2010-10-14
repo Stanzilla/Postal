@@ -45,17 +45,24 @@ local refreshFrame = CreateFrame("Frame", nil, MailFrame)
 refreshFrame:Hide()
 refreshFrame:SetScript("OnShow", function(self)
 	self.time = 10
+	self.mode = nil
 end)
 refreshFrame:SetScript("OnUpdate", function(self, elapsed)
 	self.time = self.time - elapsed
 	if self.time <= 0 then
-		self.time = 10
-		Postal:Print(L["Refreshing mailbox..."])
-		CheckInbox()
-		local current, total = GetInboxNumItems()
-		if current == 50 or current == total then
-			-- If we're here, then mailbox contains a full fresh 50 or
-			-- we're showing all the mail we have, so continue open all
+		if self.mode == nil then
+			self.time = 10
+			Postal:Print(L["Refreshing mailbox..."])
+			CheckInbox()
+			local current, total = GetInboxNumItems()
+			if current == 50 or current == total then
+				-- If we're here, then mailbox contains a full fresh 50 or
+				-- we're showing all the mail we have. Continue OpenAll in
+				-- 3 seconds to allow for other addons to do stuff.
+				self.time = 3
+				self.mode = 1
+			end
+		else
 			self:Hide()
 			Postal_OpenAll:OpenAll(true)
 		end
