@@ -4,6 +4,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("Postal")
 Postal_Rake.description = L["Prints the amount of money collected during a mail session."]
 
 local money
+local flag = false
 
 function Postal_Rake:OnEnable()
 	self:RegisterEvent("MAIL_SHOW")
@@ -14,11 +15,15 @@ end
 --end
 
 function Postal_Rake:MAIL_SHOW()
-	money = GetMoney()
-	self:RegisterEvent("MAIL_CLOSED")
+	if not flag then
+		money = GetMoney()
+		self:RegisterEvent("MAIL_CLOSED")
+		flag = true
+	end
 end
 
 function Postal_Rake:MAIL_CLOSED()
+	flag = false
 	self:UnregisterEvent("MAIL_CLOSED")
 	money = GetMoney() - money
 	if money > 0 then
