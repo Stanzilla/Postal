@@ -1,5 +1,5 @@
 ## Interface: 40000
-## Version: 3.4.2
+## Version: 3.4.3
 ## Title: Postal
 ## Author: Xinhuan
 ## X-Credits: Ammo, Rabbit, Grennon, Mikk
