@@ -315,7 +315,7 @@ function Postal_BlackBook:SortAndCountNumFriends()
 	end
 
 	-- Sort the list
-	if numFriends == 0 then return end
+	if numFriends == 0 then return 0 end
 	for i = #sorttable, numFriends+1, -1 do
 		sorttable[i] = nil
 	end
