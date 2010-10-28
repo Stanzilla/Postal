@@ -286,6 +286,7 @@ function Postal_BlackBook.RemoveContact(dropdownbutton, arg1, arg2, checked)
 end
 
 function Postal_BlackBook:SortAndCountNumFriends()
+	wipe(sorttable)
 	local numFriends = GetNumFriends()
 	for i = 1, numFriends do
 		sorttable[i] = GetFriendInfo(i)
@@ -315,11 +316,7 @@ function Postal_BlackBook:SortAndCountNumFriends()
 	end
 
 	-- Sort the list
-	if numFriends == 0 then return 0 end
-	for i = #sorttable, numFriends+1, -1 do
-		sorttable[i] = nil
-	end
-	if not ignoresortlocale[GetLocale()] then table.sort(sorttable) end
+	if numFriends > 0 and not ignoresortlocale[GetLocale()] then table.sort(sorttable) end
 
 	-- Store upvalue
 	numFriendsOnList = numFriends
