@@ -17,6 +17,7 @@ local Postal_OpenAllMenuButton
 local skipFlag
 local invFull, invAlmostFull
 local openAllOverride
+local firstMailDaysLeft
 
 -- Frame to process opening mail
 local updateFrame = CreateFrame("Frame")
@@ -139,6 +140,7 @@ function Postal_OpenAll:OpenAll(isRecursive)
 	if mailIndex == 0 then
 		return
 	end
+	firstMailDaysLeft = select(7, GetInboxHeaderInfo(1))
 
 	Postal:DisableInbox(1)
 	button:SetText(L["In Progress"])
@@ -148,6 +150,18 @@ function Postal_OpenAll:OpenAll(isRecursive)
 end
 
 function Postal_OpenAll:ProcessNext()
+	-- We need this because MAIL_INBOX_UPDATEs can now potentially
+	-- include mailbox refreshes since patch 4.0.3 (that is mail can
+	-- get inserted both at the back (old mail past 50) and at the front
+	-- (new mail received in the last 60 seconds))
+	local currentFirstMailDaysLeft = select(7, GetInboxHeaderInfo(1))
+	if currentFirstMailDaysLeft ~= firstMailDaysLeft then
+		-- First mail's daysLeft changed, indicating we have a 
+		-- fresh MAIL_INBOX_UPDATE that has new data from CheckInbox()
+		-- so we reopen from the last mail
+		return self:OpenAll(true) -- tail call
+	end
+
 	if mailIndex > 0 then
 		-- Check if we need to wait for the mailbox to change
 		if wait then
