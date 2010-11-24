@@ -54,21 +54,27 @@ refreshFrame:SetScript("OnUpdate", function(self, elapsed)
 		if self.mode == nil then
 			self.time = 10
 			Postal:Print(L["Refreshing mailbox..."])
+			self:RegisterEvent("MAIL_INBOX_UPDATE")
 			CheckInbox()
-			local current, total = GetInboxNumItems()
-			if current == 50 or current == total then
-				-- If we're here, then mailbox contains a full fresh 50 or
-				-- we're showing all the mail we have. Continue OpenAll in
-				-- 3 seconds to allow for other addons to do stuff.
-				self.time = 3
-				self.mode = 1
-			end
+			refreshFrame:OnEvent()
 		else
 			self:Hide()
 			Postal_OpenAll:OpenAll(true)
 		end
 	end
 end)
+function refreshFrame:OnEvent(event)
+	local current, total = GetInboxNumItems()
+	if current == 50 or current == total then
+		-- If we're here, then mailbox contains a full fresh 50 or
+		-- we're showing all the mail we have. Continue OpenAll in
+		-- 3 seconds to allow for other addons to do stuff.
+		self.time = 3
+		self.mode = 1
+		self:UnregisterEvent("MAIL_INBOX_UPDATE")
+	end
+end
+refreshFrame:SetScript("OnEvent", refreshFrame.OnEvent)
 
 function Postal_OpenAll:OnEnable()
 	if not button then
