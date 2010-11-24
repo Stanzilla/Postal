@@ -21,6 +21,8 @@ local wait
 local skipFlag
 local invFull, invAlmostFull
 local lastCheck
+local firstMailDaysLeft
+local mailID = {}
 
 local updateFrame = CreateFrame("Frame")
 updateFrame:Hide()
@@ -79,7 +81,7 @@ function Postal_Select:OnEnable()
 		returnButton:SetHeight(25)
 		returnButton:SetPoint("LEFT", InboxFrame, "TOP", 10, -53)
 		returnButton:SetText(L["Return"])
-		returnButton:SetScript("OnClick", function() Postal_Select:HandleSelect() end)
+		returnButton:SetScript("OnClick", function() Postal_Select:HandleSelect(2) end)
 		returnButton:SetFrameLevel(returnButton:GetFrameLevel() + 1)
 	end
 
@@ -142,6 +144,8 @@ end
 function Postal_Select:MAIL_SHOW()
 	self:RegisterEvent("MAIL_CLOSED", "Reset")
 	self:RegisterEvent("PLAYER_LEAVING_WORLD", "Reset")
+	self:RegisterEvent("MAIL_INBOX_UPDATE")
+	self:BuildUniqueIDs()
 end
 
 function Postal_Select:ToggleMail(frame)
@@ -177,6 +181,25 @@ function Postal_Select:ToggleMail(frame)
 	end
 end
 
+function Postal_Select:BuildUniqueIDs()
+	-- Build a unique ID for every mail
+	local numMails = GetInboxNumItems()
+	wipe(mailID)
+	for i = 1, numMails do
+		local packageIcon, stationeryIcon, sender, subject, money, CODAmount, daysLeft, hasItem, wasRead, wasReturned, textCreated, canReply, isGM = GetInboxHeaderInfo(i)
+		packageIcon = packageIcon or ""
+		stationeryIcon = stationeryIcon or ""
+		sender = sender or ""
+		subject = subject or ""
+		hasItem = hasItem or 0
+		wasReturned = wasReturned or 0
+		textCreated = textCreated or 0
+		canReply = canReply or 0
+		isGM = isGM or 0
+		mailID[i] = format("%s%s%s%s%d%d%d%d%d%d%d", packageIcon, stationeryIcon, sender, subject, money, CODAmount, hasItem, wasReturned, textCreated, canReply, isGM)
+	end
+end
+
 function Postal_Select:HandleSelect(mode)
 	mailIndex = GetInboxNumItems() or 0
 	attachIndex = ATTACHMENTS_MAX_RECEIVE
@@ -189,9 +212,10 @@ function Postal_Select:HandleSelect(mode)
 	if mailIndex == 0 then
 		return
 	end
+	firstMailDaysLeft = select(7, GetInboxHeaderInfo(1))
 
 	currentMode = mode
-	if currentMode then
+	if currentMode == 1 then
 		openButton:SetText(L["In Progress"])
 		returnButton:Hide()
 	else
@@ -225,7 +249,7 @@ function Postal_Select:ProcessNext()
 	if mailIndex > 0 then
 		local msgSubject, msgMoney, msgCOD, _, msgItem, _, wasReturned, msgText, canReply, isGM = select(4, GetInboxHeaderInfo(mailIndex))
 
-		if currentMode then
+		if currentMode == 1 then
 			-- Open mode
 
 			-- Check if we need to wait for the mailbox to change
@@ -402,8 +426,65 @@ end
 
 function Postal_Select:MAIL_INBOX_UPDATE()
 	--Postal:Print("update")
-	self:UnregisterEvent("MAIL_INBOX_UPDATE")
-	updateFrame:Show()
+	-- We need this because MAIL_INBOX_UPDATEs can now potentially
+	-- include mailbox refreshes since patch 4.0.3 (that is mail can
+	-- get inserted both at the back (old mail past 50) and at the front
+	-- (new mail received in the last 60 seconds))
+	local currentFirstMailDaysLeft = select(7, GetInboxHeaderInfo(1))
+	if currentFirstMailDaysLeft ~= firstMailDaysLeft then
+		-- First mail's daysLeft changed, indicating we have a 
+		-- fresh MAIL_INBOX_UPDATE that has new data from CheckInbox()
+		-- Try to determine how many new mails were added in front
+		local numMails = GetInboxNumItems()
+		local checkUntilMailIndex
+		if currentMode then
+			checkUntilMailIndex = mailIndex - 1
+		else
+			checkUntilMailIndex = #mailID
+		end
+		local numNewMailsAtFront = 0
+		local mailChanged = true
+		while mailChanged do
+			mailChanged = false
+			for i = 1, checkUntilMailIndex do
+				if i + numNewMailsAtFront > numMails then break end
+				local packageIcon, stationeryIcon, sender, subject, money, CODAmount, daysLeft, hasItem, wasRead, wasReturned, textCreated, canReply, isGM = GetInboxHeaderInfo(i + numNewMailsAtFront)
+				packageIcon = packageIcon or ""
+				stationeryIcon = stationeryIcon or ""
+				sender = sender or ""
+				subject = subject or ""
+				hasItem = hasItem or 0
+				wasReturned = wasReturned or 0
+				textCreated = textCreated or 0
+				canReply = canReply or 0
+				isGM = isGM or 0
+				local id = format("%s%s%s%s%d%d%d%d%d%d%d", packageIcon, stationeryIcon, sender, subject, money, CODAmount, hasItem, wasReturned, textCreated, canReply, isGM)
+				if mailID[i] ~= id then
+					mailChanged = true
+					numNewMailsAtFront = numNewMailsAtFront + 1
+					break
+				end
+			end
+		end
+		--Postal:Print(numNewMailsAtFront.. " new mails detected at front")
+		if numNewMailsAtFront > 0 then
+			if mailIndex then
+				mailIndex = mailIndex + numNewMailsAtFront
+			end
+			for i = 50 - numNewMailsAtFront, 1, -1 do
+				selectedMail[i + numNewMailsAtFront] = selectedMail[i]
+			end
+			for i = 1, numNewMailsAtFront do
+				selectedMail[i] = nil
+			end
+		end
+		firstMailDaysLeft = currentFirstMailDaysLeft
+	end
+	self:BuildUniqueIDs()
+
+	if currentMode == 2 then
+		updateFrame:Show()
+	end
 end
 
 function Postal_Select:Reset(event)
@@ -421,9 +502,11 @@ function Postal_Select:Reset(event)
 	returnButton:SetText(L["Return"])
 	returnButton:Show()
 	lastCheck = nil
+	currentMode = nil
 	if event == "MAIL_CLOSED" or event == "PLAYER_LEAVING_WORLD" then
 		self:UnregisterEvent("MAIL_CLOSED")
 		self:UnregisterEvent("PLAYER_LEAVING_WORLD")
+		self:UnregisterEvent("MAIL_INBOX_UPDATE")
 	end
 	InboxTooMuchMail.Show = printTooMuchMail
 end
