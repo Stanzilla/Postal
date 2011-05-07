@@ -10,6 +10,7 @@ local defaults = {
 			["*"] = true
 		},
 		OpenSpeed = 0.50,
+		ChatOutput = 1,
 		Select = {
 			SpamChat = true,
 			KeepFreeSpace = 1,
@@ -105,7 +106,7 @@ function Postal:OnInitialize()
 	self.db.RegisterCallback(self, "OnProfileReset", "OnProfileChanged")
 
 	-- Enable/disable modules based on saved settings
-	for name, module in self:IterateModules() do 
+	for name, module in self:IterateModules() do
 		module:SetEnabledState(self.db.profile.ModuleEnabledState[name] or false)
 		if module.OnEnable then
 			hooksecurefunc(module, "OnEnable", self.OnModuleEnable_Common) -- Posthook
@@ -151,7 +152,7 @@ function Postal:OnInitialize()
 end
 
 function Postal:OnProfileChanged(event, database, newProfileKey)
-	for name, module in self:IterateModules() do 
+	for name, module in self:IterateModules() do
 		if self.db.profile.ModuleEnabledState[name] then
 			module:Enable()
 		else
@@ -182,7 +183,25 @@ function Postal:Print(...)
 	for i = 1, select("#", ...) do
 		text = text.." "..tostring(select(i, ...))
 	end
-	print(text)
+
+	if not self:IsChatFrameActive(self.db.profile.ChatOutput) then
+		self.db.profile.ChatOutput = 1
+	end
+	local chatFrame = _G["ChatFrame"..self.db.profile.ChatOutput]
+	if chatFrame then
+		chatFrame:AddMessage(text)
+	end
+end
+
+function Postal:IsChatFrameActive(i)
+	local _, _, _, _, _, _, shown = FCF_GetChatWindowInfo(i);
+	local chatFrame = _G["ChatFrame"..i]
+	if chatFrame then
+		if shown or chatFrame.isDocked then
+			return true
+		end
+	end
+	return false
 end
 
 function Postal.SaveOption(dropdownbutton, arg1, arg2, checked)
@@ -196,6 +215,10 @@ end
 
 function Postal.SetOpenSpeed(dropdownbutton, arg1, arg2, checked)
 	Postal.db.profile.OpenSpeed = arg1
+end
+
+function Postal.SetChatOutput(dropdownbutton, arg1, arg2, checked)
+	Postal.db.profile.ChatOutput = arg1
 end
 
 function Postal.ProfileFunc(dropdownbutton, arg1, arg2, checked)
@@ -264,7 +287,7 @@ function Postal.Menu(self, level)
 
 		info.keepShownOnClick = 1
 		info.isNotRadio = 1
-		for name, module in Postal:IterateModules() do 
+		for name, module in Postal:IterateModules() do
 			info.text = L[name]
 			info.func = Postal.ToggleModule
 			info.arg1 = name
@@ -286,6 +309,14 @@ function Postal.Menu(self, level)
 		info.keepShownOnClick = 1
 		info.hasArrow = 1
 		info.value = "OpenSpeed"
+		UIDropDownMenu_AddButton(info, level)
+
+		info.text = L["Chat Output"]
+		info.func = self.UncheckHack
+		info.notCheckable = 1
+		info.keepShownOnClick = 1
+		info.hasArrow = 1
+		info.value = "ChatOutput"
 		UIDropDownMenu_AddButton(info, level)
 
 		info.text = L["Profile"]
@@ -330,6 +361,18 @@ function Postal.Menu(self, level)
 				UIDropDownMenu_AddButton(info, level)
 			end
 
+		elseif UIDROPDOWNMENU_MENU_VALUE == "ChatOutput" then
+			local selectedFrame = Postal.db.profile.ChatOutput
+			for i = 1, NUM_CHAT_WINDOWS do
+				if Postal:IsChatFrameActive(i) then
+					info.text = format("%d. %s", i, _G["ChatFrame"..i.."Tab"]:GetText())
+					info.func = Postal.SetChatOutput
+					info.checked = i == selectedFrame
+					info.arg1 = i
+					UIDropDownMenu_AddButton(info, level)
+				end
+			end
+
 		elseif UIDROPDOWNMENU_MENU_VALUE == "Profile" then
 			-- Profile stuff
 			info.hasArrow = 1
@@ -361,7 +404,7 @@ function Postal.Menu(self, level)
 			info.arg1 = "ResetProfile"
 			info.arg2 = nil
 			UIDropDownMenu_AddButton(info, level)
-			
+
 		elseif type(UIDROPDOWNMENU_MENU_VALUE) == "table" and UIDROPDOWNMENU_MENU_VALUE.ModuleMenu then
 			-- Submenus for modules
 			self.levelAdjust = 1
