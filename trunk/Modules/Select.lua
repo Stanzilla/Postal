@@ -181,22 +181,26 @@ function Postal_Select:ToggleMail(frame)
 	end
 end
 
+function Postal_Select:GetUniqueID(index)
+	local packageIcon, stationeryIcon, sender, subject, money, CODAmount, daysLeft, hasItem, wasRead, wasReturned, textCreated, canReply, isGM = GetInboxHeaderInfo(index)
+	packageIcon = packageIcon or ""
+	stationeryIcon = stationeryIcon or ""
+	sender = sender or ""
+	subject = subject or ""
+	hasItem = hasItem or 0
+	wasReturned = wasReturned or 0
+	textCreated = textCreated or 0
+	canReply = canReply or 0
+	isGM = isGM or 0
+	return format("%s%s%s%s%d%d%d%d%d%d%d", packageIcon, stationeryIcon, sender, subject, money, CODAmount, hasItem, wasReturned, textCreated, canReply, isGM)
+end
+
 function Postal_Select:BuildUniqueIDs()
 	-- Build a unique ID for every mail
 	local numMails = GetInboxNumItems()
 	wipe(mailID)
 	for i = 1, numMails do
-		local packageIcon, stationeryIcon, sender, subject, money, CODAmount, daysLeft, hasItem, wasRead, wasReturned, textCreated, canReply, isGM = GetInboxHeaderInfo(i)
-		packageIcon = packageIcon or ""
-		stationeryIcon = stationeryIcon or ""
-		sender = sender or ""
-		subject = subject or ""
-		hasItem = hasItem or 0
-		wasReturned = wasReturned or 0
-		textCreated = textCreated or 0
-		canReply = canReply or 0
-		isGM = isGM or 0
-		mailID[i] = format("%s%s%s%s%d%d%d%d%d%d%d", packageIcon, stationeryIcon, sender, subject, money, CODAmount, hasItem, wasReturned, textCreated, canReply, isGM)
+		mailID[i] = self:GetUniqueID(i)
 	end
 end
 
@@ -383,14 +387,16 @@ function Postal_Select:ProcessNext()
 			if Postal.db.profile.Select.SpamChat and attachIndex == ATTACHMENTS_MAX_RECEIVE then
 				Postal:Print(L["Return"].." "..mailIndex..": "..msgSubject)
 			end
-			if not wasReturned and canReply then
+			if not InboxItemCanDelete(mailIndex) then
 				self:RegisterEvent("MAIL_INBOX_UPDATE")
 				ReturnInboxItem(mailIndex)
 				selectedMail[mailIndex] = nil
 				mailIndex = mailIndex - 1
+				attachIndex = ATTACHMENTS_MAX_RECEIVE
 			else
 				Postal:Print(L["Skipping"].." "..mailIndex..": "..msgSubject)
 				mailIndex = mailIndex - 1
+				attachIndex = ATTACHMENTS_MAX_RECEIVE
 				return self:ProcessNext() -- tail call
 			end
 		end
@@ -448,17 +454,7 @@ function Postal_Select:MAIL_INBOX_UPDATE()
 			mailChanged = false
 			for i = 1, checkUntilMailIndex do
 				if i + numNewMailsAtFront > numMails then break end
-				local packageIcon, stationeryIcon, sender, subject, money, CODAmount, daysLeft, hasItem, wasRead, wasReturned, textCreated, canReply, isGM = GetInboxHeaderInfo(i + numNewMailsAtFront)
-				packageIcon = packageIcon or ""
-				stationeryIcon = stationeryIcon or ""
-				sender = sender or ""
-				subject = subject or ""
-				hasItem = hasItem or 0
-				wasReturned = wasReturned or 0
-				textCreated = textCreated or 0
-				canReply = canReply or 0
-				isGM = isGM or 0
-				local id = format("%s%s%s%s%d%d%d%d%d%d%d", packageIcon, stationeryIcon, sender, subject, money, CODAmount, hasItem, wasReturned, textCreated, canReply, isGM)
+				local id = self:GetUniqueID(i + numNewMailsAtFront)
 				if mailID[i] ~= id then
 					mailChanged = true
 					numNewMailsAtFront = numNewMailsAtFront + 1
