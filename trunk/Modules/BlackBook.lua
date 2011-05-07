@@ -63,6 +63,14 @@ function Postal_BlackBook:OnEnable()
 	Postal.db.global.BlackBook.realID = nil
 	db.AutoCompleteRealIDFriends = nil
 
+	-- Delete old recent data without faction and realm data
+	for i = #Postal.db.profile.BlackBook.recent, 1, -1 do
+		local p, r, f = strsplit("|", Postal.db.profile.BlackBook.recent[i])
+		if (not r) or (not f) then
+			tremove(Postal.db.profile.BlackBook.recent, i)
+		end
+	end
+
 	-- For enabling after a disable
 	Postal_BlackBookButton:Show()
 end
@@ -140,19 +148,26 @@ function Postal_BlackBook:SendMailFrame_Reset()
 	local name = strtrim(SendMailNameEditBox:GetText())
 	if name == "" then return self.hooks["SendMailFrame_Reset"]() end
 	SendMailNameEditBox:AddHistoryLine(name)
+
+	local realm = GetRealmName()
+	local faction = UnitFactionGroup("player")
+	if not realm or not faction then return self.hooks["SendMailFrame_Reset"]() end
+
+	local namestring = ("%s|%s|%s"):format(name, realm, faction)
 	local db = Postal.db.profile.BlackBook.recent
 	for k = 1, #db do
-		if name == db[k] then tremove(db, k) break end
+		if namestring == db[k] then tremove(db, k) break end
 	end
-	tinsert(db, 1, name)
-	for k = #db, 11, -1 do
+	tinsert(db, 1, namestring)
+	for k = #db, 21, -1 do
 		tremove(db, k)
 	end
-	self.hooks["SendMailFrame_Reset"]()
+	local a, b, c = self.hooks["SendMailFrame_Reset"]()
 	if Postal.db.profile.BlackBook.AutoFill then
 		SendMailNameEditBox:SetText(name)
 		SendMailNameEditBox:HighlightText()
 	end
+	return a, b, c
 end
 
 function Postal_BlackBook.ClearRecent(dropdownbutton, arg1, arg2, checked)
@@ -163,10 +178,20 @@ end
 function Postal_BlackBook:MailFrameTab_OnClick(button, tab)
 	self.hooks["MailFrameTab_OnClick"](button, tab)
 	if Postal.db.profile.BlackBook.AutoFill and tab == 2 then
-		local name = Postal.db.profile.BlackBook.recent[1]
-		if name and SendMailNameEditBox:GetText() == "" then
-			SendMailNameEditBox:SetText(name)
-			SendMailNameEditBox:HighlightText()
+		local realm = GetRealmName()
+		local faction = UnitFactionGroup("player")
+		local player = UnitName("player")
+		
+		-- Find the first eligible recently mailed
+		for i = 1, #Postal.db.profile.BlackBook.recent do
+			local p, r, f = strsplit("|", Postal.db.profile.BlackBook.recent[i])
+			if r == realm and f == faction and p ~= player then
+				if p and SendMailNameEditBox:GetText() == "" then
+					SendMailNameEditBox:SetText(p)
+					SendMailNameEditBox:HighlightText()
+					break
+				end
+			end
 		end
 	end
 end
@@ -214,10 +239,12 @@ function Postal_BlackBook:OnChar(editbox, ...)
 	if not newname and db.AutoCompleteRecent then
 		local db2 = db.recent
 		for j = 1, #db2 do
-			local name = db2[j]
-			if strfind(strupper(name), text, 1, 1) == 1 then
-				newname = name
-				break
+			local p, r, f = strsplit("|", db2[j])
+			if r == realm and f == faction and p ~= player then
+				if strfind(strupper(p), text, 1, 1) == 1 then
+					newname = p
+					break
+				end
 			end
 		end
 	end
@@ -403,13 +430,19 @@ function Postal_BlackBook.BlackBookMenu(self, level)
 	elseif level == 2 then
 		info.notCheckable = 1
 		if UIDROPDOWNMENU_MENU_VALUE == "recent" then
+			local realm = GetRealmName()
+			local faction = UnitFactionGroup("player")
+			local player = UnitName("player")
 			local db = Postal.db.profile.BlackBook.recent
 			if #db == 0 then return end
 			for i = 1, #db do
-				info.text = db[i]
-				info.func = Postal_BlackBook.SetSendMailName
-				info.arg1 = db[i]
-				UIDropDownMenu_AddButton(info, level)
+				local p, r, f = strsplit("|", db[i])
+				if r == realm and f == faction and p ~= player then
+					info.text = p
+					info.func = Postal_BlackBook.SetSendMailName
+					info.arg1 = p
+					UIDropDownMenu_AddButton(info, level)
+				end
 			end
 
 			info.disabled = 1
