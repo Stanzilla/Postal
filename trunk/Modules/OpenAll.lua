@@ -323,7 +323,7 @@ function Postal_OpenAll:ProcessNext()
 		if numUnshownItems ~= totalItems - numItems then
 			-- We will Open All again if the number of unshown items is different
 			return self:OpenAll(true) -- tail call
-		else if totalItems > numItems and numItems < MAX_MAIL_SHOWN then
+		elseif totalItems > numItems and numItems < MAX_MAIL_SHOWN then
 			-- We only want to refresh if there's more items to show
 			Postal:Print(L["Not all messages are shown, refreshing mailbox soon to continue Open All..."])
 			refreshFrame:Show()
