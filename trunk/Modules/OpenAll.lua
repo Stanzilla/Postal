@@ -287,9 +287,9 @@ function Postal_OpenAll:ProcessNext()
 		if attachIndex > 0 and (lootFlag or not invFull) then
 			-- If there's attachments, take the item
 			--Postal:Print("Getting Item from Message "..mailIndex..", "..attachIndex)
+			lastNumAttach, lastNumGold = Postal:CountItemsAndMoney()
 			TakeInboxItem(mailIndex, attachIndex)
 
-			lastNumAttach, lastNumGold = Postal:CountItemsAndMoney()
 			wait = true
 			-- Find next attachment index backwards
 			local attachIndex2 = attachIndex - 1
@@ -302,9 +302,9 @@ function Postal_OpenAll:ProcessNext()
 		elseif msgMoney > 0 then
 			-- No attachments, but there is money
 			--Postal:Print("Getting Gold from Message "..mailIndex)
+			lastNumAttach, lastNumGold = Postal:CountItemsAndMoney()
 			TakeInboxMoney(mailIndex)
 
-			lastNumAttach, lastNumGold = Postal:CountItemsAndMoney()
 			wait = true
 
 			updateFrame.lootingMoney = true
