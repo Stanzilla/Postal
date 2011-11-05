@@ -43,23 +43,31 @@ updateFrame:SetScript("OnUpdate", function(self, elapsed)
 	end
 end)
 
-local lastUnseen,lastTime = 0,0
-local function noop() end
-local function printTooMuchMail()
+
+local lastSeen,lastRefill = 0,0
+
+local function updateMailCounts()
 	local cur,tot = GetInboxNumItems()
-	if tot-cur ~= lastUnseen or GetTime()-lastTime>=61 then
-		-- This is a low-effort guess at how long is remaining until we can fetch new mail.
-		lastUnseen = tot-cur
-		lastTime = GetTime()
+	if cur>lastSeen then
+		lastRefill = GetTime()
 	end
-	if cur>=50 then
-		Postal:Print(format(L["There are %i more messages not currently shown."], lastUnseen))
-	else
-		Postal:Print(format(L["There are %i more messages not currently shown. More should become available in %i seconds."], lastUnseen, lastTime+61-GetTime()))
-	end
+	lastSeen = cur
+end
+
+local function printTooMuchMail()
+	InboxTooMuchMail.Show = updateMailCounts	-- only print once, rest of the time: update
+	updateMailCounts()
 	
-	-- Just print once
-	InboxTooMuchMail.Show = noop
+	local cur,tot = GetInboxNumItems()
+	
+	local timeLeft = lastRefill+60-GetTime()
+	if cur>=50 or -- if inbox is full, no more will arrive
+	   timeLeft<0 then	-- if someone waited more than 60 seconds to take a mail out....
+		Postal:Print(format(L["There are %i more messages not currently shown."], tot-cur))
+	else
+		Postal:Print(format(L["There are %i more messages not currently shown. More should become available in %i seconds."], tot-cur, timeLeft))
+	end
+
 end
 
 function Postal_Select:OnEnable()
