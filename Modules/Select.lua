@@ -411,7 +411,7 @@ function Postal_Select:ProcessNext()
 
 	else
 		-- Reached the end of opening all selected mail
-		if IsAddOnLoaded("MrPlow") then
+		if IsAddOnLoaded("MrPlow") and Postal.db.profile.Select.UseMrPlow then
 			if MrPlow.DoStuff then
 				MrPlow:DoStuff("stack")
 			elseif MrPlow.ParseInventory then -- Backwards compat
@@ -553,6 +553,18 @@ function Postal_Select.ModuleMenu(self, level)
 		info.checked = Postal.db.profile.Select.SpamChat
 		info.isNotRadio = 1
 		UIDropDownMenu_AddButton(info, level)
+		
+		if IsAddOnLoaded("MrPlow") then
+			info.text = L["Use Mr.Plow after opening"]
+			info.hasArrow = nil
+			info.value = nil
+			info.func = Postal.SaveOption
+			info.arg1 = "Select"
+			info.arg2 = "UseMrPlow"
+			info.checked = Postal.db.profile.Select.UseMrPlow
+			info.isNotRadio = 1
+			UIDropDownMenu_AddButton(info, level)
+		end
 
 	elseif level == 2 + self.levelAdjust then
 		if UIDROPDOWNMENU_MENU_VALUE == "KeepFreeSpace" then
