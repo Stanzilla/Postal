@@ -200,7 +200,7 @@ function Postal_Select:GetUniqueID(index)
 	textCreated = textCreated or 0
 	canReply = canReply or 0
 	isGM = isGM or 0
-	return format("%s%s%s%s%d%d%d%d%d%d%d", packageIcon, stationeryIcon, sender, subject, money, CODAmount, hasItem, wasReturned, textCreated, canReply, isGM)
+	return format("%s%s%s%s%s%s%d%d%d%d%d", packageIcon, stationeryIcon, sender, subject, money, CODAmount, hasItem, wasReturned, textCreated, canReply, isGM)
 end
 
 function Postal_Select:BuildUniqueIDs()
