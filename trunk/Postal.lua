@@ -14,6 +14,7 @@ local defaults = {
 		Select = {
 			SpamChat = true,
 			KeepFreeSpace = 1,
+			UseMrPlow = true,
 		},
 		OpenAll = {
 			AHCancelled = true,
@@ -29,6 +30,7 @@ local defaults = {
 			Attachments = true,
 			SpamChat = true,
 			KeepFreeSpace = 1,
+			UseMrPlow = true,
 		},
 		Express = {
 			EnableAltClick = true,

@@ -330,7 +330,7 @@ function Postal_OpenAll:ProcessNext()
 			return
 		end
 
-		if IsAddOnLoaded("MrPlow") then
+		if IsAddOnLoaded("MrPlow") and Postal.db.profile.OpenAll.UseMrPlow then
 			if MrPlow.DoStuff then
 				MrPlow:DoStuff("stack")
 			elseif MrPlow.ParseInventory then -- Backwards compat
@@ -478,6 +478,16 @@ function Postal_OpenAll.ModuleMenu(self, level)
 			info.arg2 = "SpamChat"
 			info.checked = db.SpamChat
 			UIDropDownMenu_AddButton(info, level)
+			
+			if IsAddOnLoaded("MrPlow") then
+				info.text = L["Use Mr.Plow after opening"]
+				info.hasArrow = nil
+				info.value = nil
+				info.func = Postal.SaveOption
+				info.arg2 = "UseMrPlow"
+				info.checked = db.UseMrPlow
+				UIDropDownMenu_AddButton(info, level)
+			end
 		end
 
 	elseif level == 3 + self.levelAdjust then
