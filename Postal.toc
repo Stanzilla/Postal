@@ -10,6 +10,7 @@
 ## Notes-esES: Postal: soporte mejorado para el buzon
 ## Notes-zhTW: Postal: 強化信箱功能。
 ## Notes-zhCN: Postal: 增强信箱功能
+## Notes-ptBR: Postal: Apoio caixa reforçada
 ## OptionalDeps: Ace3, !BlizzBugsSuck, !ClassColors
 ## SavedVariables: Postal3DB
 

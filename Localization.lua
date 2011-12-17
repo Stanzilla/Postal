@@ -56,3 +56,9 @@ if L then
 --@localization(locale="zhTW", format="lua_additive_table", table-name="L", handle-unlocalized="comment")@
 return
 end
+
+local L = AL3:NewLocale("Postal", "ptBR")
+if L then
+--@localization(locale="ptBR", format="lua_additive_table", table-name="L", handle-unlocalized="comment")@
+return
+end
