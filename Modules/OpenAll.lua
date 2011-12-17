@@ -161,7 +161,7 @@ function Postal_OpenAll:ProcessNext()
 	-- get inserted both at the back (old mail) and at the front
 	-- (new mail received in the last 60 seconds))
 	local currentFirstMailDaysLeft = select(7, GetInboxHeaderInfo(1))
-	if currentFirstMailDaysLeft ~= firstMailDaysLeft then
+	if currentFirstMailDaysLeft ~= 0 and currentFirstMailDaysLeft ~= firstMailDaysLeft then
 		-- First mail's daysLeft changed, indicating we have a 
 		-- fresh MAIL_INBOX_UPDATE that has new data from CheckInbox()
 		-- so we reopen from the last mail
