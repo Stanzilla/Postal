@@ -122,8 +122,8 @@ function Postal_Express:ContainerFrameItemButton_OnModifiedClick(this, button, .
 		if Postal.db.profile.Express.BulkSend and itemq and itemc then
 		  -- itemc = itemq.."."..itemc
 		  itemsc = itemc.."."..(itemsc or "")
+		  local added = (itemlocked and 0) or -1
 		  for pass = 0,4 do
-		    local added = itemlocked and 1 or 0
 		    for b = 0,4 do
 		      for s = 1, GetContainerNumSlots(b) do
 			local tid = GetContainerItemID(b, s)
@@ -153,7 +153,7 @@ function Postal_Express:ContainerFrameItemButton_OnModifiedClick(this, button, .
 			end
 		      end
 		    end
-		    if added > 1 then break end
+		    if added >= 1 then break end
 		  end
 		  ClearCursor()
 		end
