@@ -116,6 +116,7 @@ function Postal_Express:ContainerFrameItemButton_OnModifiedClick(this, button, .
 	elseif button == "LeftButton" and IsControlKeyDown() and SendMailFrame:IsVisible() and not CursorHasItem() then
 		local bag, slot = this:GetParent():GetID(), this:GetID()
 		local itemid = GetContainerItemID(bag, slot)
+		if not itemid then return end
 		local itemlocked = select(3,GetContainerItemInfo(bag,slot))
 		local itemq, _,_, itemc, itemsc, _, itemes = select(3,GetItemInfo(itemid))
 		itemes = itemes and #itemes > 0
