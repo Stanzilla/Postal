@@ -233,7 +233,12 @@ function Postal_OpenAll:ProcessNext()
 		if Postal.db.profile.OpenAll.SpamChat and attachIndex == ATTACHMENTS_MAX_RECEIVE then
 			if not invFull or msgMoney > 0 then
 				local moneyString = msgMoney > 0 and " ["..Postal:GetMoneyString(msgMoney).."]" or ""
-				Postal:Print(format("%s %d: %s%s", L["Processing Message"], mailIndex, msgSubject or "", moneyString))
+				local playerName
+				if (mailType == "AHSuccess" or mailType == "AHWon") then
+				  playerName = select(3,GetInboxInvoiceInfo(mailIndex))
+				  playerName = playerName and (" ("..playerName..")")
+				end
+				Postal:Print(format("%s %d: %s%s%s", L["Processing Message"], mailIndex, msgSubject or "", moneyString, (playerName or "")))
 			end
 		end
 
