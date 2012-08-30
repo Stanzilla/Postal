@@ -83,9 +83,9 @@ function Postal_OpenAll:OnEnable()
 		button:SetWidth(120)
 		button:SetHeight(25)
 		if GetLocale() == "frFR" then
-			button:SetPoint("CENTER", InboxFrame, "TOP", -32, -410)
+			button:SetPoint("CENTER", InboxFrame, "TOP", -46, -399)
 		else
-			button:SetPoint("CENTER", InboxFrame, "TOP", -22, -410)
+			button:SetPoint("CENTER", InboxFrame, "TOP", -36, -399)
 		end
 		button:SetText(L["Open All"])
 		button:SetScript("OnClick", function() Postal_OpenAll:OpenAll() end)
