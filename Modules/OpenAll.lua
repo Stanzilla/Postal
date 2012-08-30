@@ -235,8 +235,8 @@ function Postal_OpenAll:ProcessNext()
 				local moneyString = msgMoney > 0 and " ["..Postal:GetMoneyString(msgMoney).."]" or ""
 				local playerName
 				if (mailType == "AHSuccess" or mailType == "AHWon") then
-				  playerName = select(3,GetInboxInvoiceInfo(mailIndex))
-				  playerName = playerName and (" ("..playerName..")")
+					playerName = select(3,GetInboxInvoiceInfo(mailIndex))
+					playerName = playerName and (" ("..playerName..")")
 				end
 				Postal:Print(format("%s %d: %s%s%s", L["Processing Message"], mailIndex, msgSubject or "", moneyString, (playerName or "")))
 			end
