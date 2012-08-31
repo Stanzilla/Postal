@@ -121,42 +121,42 @@ function Postal_Express:ContainerFrameItemButton_OnModifiedClick(this, button, .
 		local itemq, _,_, itemc, itemsc, _, itemes = select(3,GetItemInfo(itemid))
 		itemes = itemes and #itemes > 0
 		if Postal.db.profile.Express.BulkSend and itemq and itemc then
-		  -- itemc = itemq.."."..itemc
-		  itemsc = itemc.."."..(itemsc or "")
-		  local added = (itemlocked and 0) or -1
-		  for pass = 0,4 do
-		    for b = 0,4 do
-		      for s = 1, GetContainerNumSlots(b) do
-			local tid = GetContainerItemID(b, s)
-		        if not tid or select(3,GetContainerItemInfo(b,s)) then
-			  -- item locked, already attached
-			else
-		          local tq, _,_, tc, tsc, _, tes = select(3,GetItemInfo(tid))
-		          -- tc = (tq or "").."."..(tc or "")
-		          tsc = (tc or "").."."..(tsc or "")
-			  tes = tes and #tes > 0
-		          if (pass == 0 and itemq == 0 and tq == 0) -- vendor trash
-			  or (pass == 0 and itemq == 2 and tq == 2 and itemes and tes) -- green boe gear
-			  or (pass == 1 and tid == itemid) -- identical items
-		          or (pass == 2 and tsc == itemsc) -- same subtype
-		          or (pass == 3 and tc == itemc)   -- same type
-		          or (pass == 4 and tq == itemq)   -- same quality
-			  then
-			    ClearCursor()
-		            PickupContainerItem(b, s)
-		            ClickSendMailItemButton()
-			    if select(3,GetContainerItemInfo(b,s)) then -- now locked => added
-			      added = added + 1
-			    else -- failed
-			      ClearCursor()
-			    end
-			  end
+			-- itemc = itemq.."."..itemc
+			itemsc = itemc.."."..(itemsc or "")
+			local added = (itemlocked and 0) or -1
+			for pass = 0,4 do
+				for b = 0,4 do
+					for s = 1, GetContainerNumSlots(b) do
+						local tid = GetContainerItemID(b, s)
+						if not tid or select(3,GetContainerItemInfo(b,s)) then
+							-- item locked, already attached
+						else
+							local tq, _,_, tc, tsc, _, tes = select(3,GetItemInfo(tid))
+							-- tc = (tq or "").."."..(tc or "")
+							tsc = (tc or "").."."..(tsc or "")
+							tes = tes and #tes > 0
+							if (pass == 0 and itemq == 0 and tq == 0) -- vendor trash
+							or (pass == 0 and itemq == 2 and tq == 2 and itemes and tes) -- green boe gear
+							or (pass == 1 and tid == itemid) -- identical items
+							or (pass == 2 and tsc == itemsc) -- same subtype
+							or (pass == 3 and tc == itemc)   -- same type
+							or (pass == 4 and tq == itemq)   -- same quality
+							then
+								ClearCursor()
+								PickupContainerItem(b, s)
+								ClickSendMailItemButton()
+								if select(3,GetContainerItemInfo(b,s)) then -- now locked => added
+									added = added + 1
+								else -- failed
+									ClearCursor()
+								end
+							end
+						end
+					end
+				end
+				if added >= 1 then break end
 			end
-		      end
-		    end
-		    if added >= 1 then break end
-		  end
-		  ClearCursor()
+			ClearCursor()
 		end
 	else
 		return self.hooks["ContainerFrameItemButton_OnModifiedClick"](this, button, ...)
