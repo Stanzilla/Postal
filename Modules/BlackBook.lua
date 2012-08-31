@@ -104,22 +104,19 @@ function Postal_BlackBook:AddAlt()
 	local _, class = UnitClass("player")
 	if not realm or not faction or not player or not level or not class then return end
 	local namestring = ("%s|%s|%s|%s|%s"):format(player, realm, faction, level, class)
-	local flag = true
 	local db = Postal.db.global.BlackBook.alts
 	enableAltsMenu = false
 	for i = #db, 1, -1 do
 		local p, r, f, l, c = strsplit("|", db[i])
-		if p == player and r == realm and f == faction then
+		if p == player and r == realm then
 			tremove(db, i)
 		end
 		if p ~= player and r == realm and f == faction then
 			enableAltsMenu = true
 		end
 	end
-	if flag then
-		tinsert(db, namestring)
-		table.sort(db)
-	end
+	tinsert(db, namestring)
+	table.sort(db)
 	self:UnregisterEvent("PLAYER_ENTERING_WORLD")
 	self.AddAlt = nil -- Kill ourselves so we only run it once
 end
