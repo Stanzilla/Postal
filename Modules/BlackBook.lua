@@ -234,7 +234,7 @@ function Postal_BlackBook:OnChar(editbox, ...)
 			local p, r, f = strsplit("|", db[i])
 			if p ~= player and r ~= realm then
 				if strfind(strupper(p), text, 1, 1) == 1 then
-					newname = p
+					newname = p.."-"..r
 					break
 				end
 			end
