@@ -146,12 +146,6 @@ function Postal:OnInitialize()
 		b:SetScript("OnEnter", subjectHoverIn)
 		b:SetScript("OnLeave", subjectHoverOut)
 	end
-
-	-- To fix Blizzard's bug caused by the new "self:SetFrameLevel(2);"
-	if TOC < 40000 and not IsAddOnLoaded("!BlizzBugsSuck") then
-		hooksecurefunc("UIDropDownMenu_CreateFrames", Postal.FixMenuFrameLevels)
-	end
-
 	self.OnInitialize = nil
 end
 
@@ -523,25 +517,6 @@ function Postal.About()
 	Postal.aboutFrame.editBox:SetText(table.concat(t, "\n"))
 	Postal.aboutFrame:Show()
 	wipe(t) -- For garbage collection
-end
-
-if TOC < 40000 and not IsAddOnLoaded("!BlizzBugsSuck") then
-	-- To fix Blizzard's bug caused by the new "self:SetFrameLevel(2);"
-	local function FixFrameLevel(level, ...)
-		for i = 1, select("#", ...) do
-			local button = select(i, ...)
-			button:SetFrameLevel(level)
-		end
-	end
-	function Postal.FixMenuFrameLevels()
-		-- Postal only uses up to 4 levels of menus
-		for i = 1, 4 do
-			local f = _G["DropDownList"..i]
-			if f then
-				FixFrameLevel(f:GetFrameLevel() + 2, f:GetChildren())
-			end
-		end
-	end
 end
 
 ---------------------------
