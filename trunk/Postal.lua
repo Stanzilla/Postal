@@ -569,14 +569,14 @@ function Postal:DisableInbox(disable)
 		if not self:IsHooked("InboxFrame_OnClick") then
 			self:RawHook("InboxFrame_OnClick", noop, true)
 			for i = 1, 7 do
-				_G["MailItem" .. i .. "ButtonIcon"]:SetDesaturated(1)
+				_G["MailItem" .. i .. "ButtonIcon"]:SetDesaturated(true)
 			end
 		end
 	else
 		if self:IsHooked("InboxFrame_OnClick") then
 			self:Unhook("InboxFrame_OnClick")
 			for i = 1, 7 do
-				_G["MailItem" .. i .. "ButtonIcon"]:SetDesaturated(nil)
+				_G["MailItem" .. i .. "ButtonIcon"]:SetDesaturated(false)
 			end
 		end
 	end
