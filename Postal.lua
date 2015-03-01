@@ -240,14 +240,9 @@ StaticPopupDialogs["POSTAL_NEW_PROFILE"] = {
 	button2 = CANCEL,
 	hasEditBox = 1,
 	maxLetters = 128,
-	hasWideEditBox = 1,  -- Not needed in Cata
 	editBoxWidth = 350,  -- Needed in Cata
 	OnAccept = function(self)
-		if TOC < 40000 then
-			Postal.db:SetProfile(strtrim(self.wideEditBox:GetText()))
-		else
-			Postal.db:SetProfile(strtrim(self.editBox:GetText()))
-		end
+		Postal.db:SetProfile(strtrim(self.editBox:GetText()))
 	end,
 	OnShow = function(self)
 		if TOC < 40000 then
