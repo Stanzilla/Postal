@@ -245,22 +245,13 @@ StaticPopupDialogs["POSTAL_NEW_PROFILE"] = {
 		Postal.db:SetProfile(strtrim(self.editBox:GetText()))
 	end,
 	OnShow = function(self)
-		if TOC < 40000 then
-			self.wideEditBox:SetText(Postal.db:GetCurrentProfile())
-			self.wideEditBox:SetFocus()
-		else
-			self.editBox:SetText(Postal.db:GetCurrentProfile())
-			self.editBox:SetFocus()
-		end
+		self.editBox:SetText(Postal.db:GetCurrentProfile())
+		self.editBox:SetFocus()
 	end,
 	OnHide = StaticPopupDialogs[TOC < 40000 and "SET_GUILDMOTD" or "SET_GUILDPLAYERNOTE"].OnHide,
 	EditBoxOnEnterPressed = function(self)
 		local parent = self:GetParent()
-		if TOC < 40000 then
-			Postal.db:SetProfile(strtrim(parent.wideEditBox:GetText()))
-		else
-			Postal.db:SetProfile(strtrim(parent.editBox:GetText()))
-		end
+		Postal.db:SetProfile(strtrim(parent.editBox:GetText()))
 		parent:Hide()
 	end,
 	EditBoxOnEscapePressed = StaticPopupDialogs[TOC < 40000 and "SET_GUILDMOTD" or "SET_GUILDPLAYERNOTE"].EditBoxOnEscapePressed,
