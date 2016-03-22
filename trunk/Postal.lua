@@ -27,6 +27,7 @@ local defaults = {
 			NeutralAHOutbid = true,
 			NeutralAHSuccess = true,
 			NeutralAHWon = true,
+			Postmaster = true,
 			Attachments = true,
 			SpamChat = true,
 			KeepFreeSpace = 1,
