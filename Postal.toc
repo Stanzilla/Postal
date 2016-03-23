@@ -1,8 +1,11 @@
 ## Interface: 60200
-## Version: 3.5.4
 ## Title: Postal
+## Version: @project-version@
+## X-Build: @project-revision@
+## X-ReleaseDate: @project-date-iso@
+## X-Revision: $Revision$
 ## Author: Xinhuan
-## X-Credits: Ammo, Rabbit, Grennon, Mikk
+## X-Credits: Ammo, Rabbit, Grennon, Mikk, oscarucb
 ## X-Category: Mail
 ## Notes: Postal: Enhanced Mailbox support
 ## Notes-ruRU: Postal: Расширенная поддержка почтового ящика
