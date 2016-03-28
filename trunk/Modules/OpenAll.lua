@@ -215,8 +215,8 @@ function Postal_OpenAll:ProcessNext()
 			     or sender:find(L["Thaumaturge Vashreen"]))	-- bonus roll w/ bags full (npc=54441)
 			   then
 				-- open attachments below
-			elseif msgItem and (openAllOverride or Postal.db.profile.OpenAll.Attachments) then
-				-- open attachments below
+			elseif openAllOverride or Postal.db.profile.OpenAll.Attachments then
+				-- open attachments and/or money below
 			else	-- skip it
 				mailIndex = mailIndex - 1
 				attachIndex = ATTACHMENTS_MAX_RECEIVE
