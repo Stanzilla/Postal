@@ -47,13 +47,15 @@ function Postal_Express:InboxFrameItem_OnEnter(this, motion)
 		for i = 1, ATTACHMENTS_MAX_RECEIVE do
 			local name, itemTexture, count, quality, canUse = GetInboxItem(this.index, i);
 			if name then
-				local itemLink = GetInboxItemLink(this.index, i);
+				local itemLink = GetInboxItemLink(this.index, i) or name
+				local tex = itemTexture and ("\124T%s:0\124t "):format(itemTexture) or ""
 				if count > 1 then
-					tooltip:AddLine(("%sx%d"):format(itemLink, count))
+					tooltip:AddLine(("%s%sx%d"):format(tex, itemLink, count))
 				else
-					tooltip:AddLine(itemLink)
+					tooltip:AddLine(("%s%s"):format(tex, itemLink))
 				end
-				tooltip:AddTexture(itemTexture)
+				-- this only works for first 10 items:
+				--tooltip:AddTexture(itemTexture)
 			end
 		end
 	end
