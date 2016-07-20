@@ -45,7 +45,7 @@ function Postal_Express:InboxFrameItem_OnEnter(this, motion)
 	local money, COD, _, hasItem, _, wasReturned, _, canReply = select(5, GetInboxHeaderInfo(this.index))
 	if Postal.db.profile.Express.MultiItemTooltip and hasItem and hasItem > 1 then
 		for i = 1, ATTACHMENTS_MAX_RECEIVE do
-			local name, itemTexture, count, quality, canUse = GetInboxItem(this.index, i);
+			local name, itemID, itemTexture, count, quality, canUse = GetInboxItem(this.index, i);
 			if name then
 				local itemLink = GetInboxItemLink(this.index, i) or name
 				local tex = itemTexture and ("\124T%s:0\124t "):format(itemTexture) or ""
