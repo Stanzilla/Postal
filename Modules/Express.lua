@@ -104,7 +104,7 @@ function Postal_Express:ContainerFrameItemButton_OnModifiedClick(this, button, .
 		if Postal.db.profile.Express.AutoSend then
 			for i = 1, ATTACHMENTS_MAX_SEND do
 				-- get info about the attachment
-				local itemName, itemTexture, stackCount, quality = GetSendMailItem(i)
+				local itemName, itemID, itemTexture, stackCount, quality = GetSendMailItem(i)
 				if SendMailNameEditBox:GetText() ~= "" and texture == itemTexture and count == stackCount then
 					SendMailFrame_SendMail()
 				end
