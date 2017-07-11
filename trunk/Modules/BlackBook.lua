@@ -229,11 +229,12 @@ function Postal_BlackBook:OnChar(editbox, ...)
 	
 		-- Check all alt list
 	if db.AutoCompleteAllAlts then
+		local nosptext = text:gsub("%s*","") -- ignore spaces in matching fully-qualified names
 		local db = Postal.db.global.BlackBook.alts
 		for i = 1, #db do
 			local p, r, f = strsplit("|", db[i])
 			if p ~= player and r ~= realm then
-				if strfind(strupper(p), text, 1, 1) == 1 then
+				if strfind(strupper(p.."-"..r):gsub("%s*",""), nosptext, 1, 1) == 1 then
 					newname = p.."-"..r
 					break
 				end
@@ -243,16 +244,21 @@ function Postal_BlackBook:OnChar(editbox, ...)
 
 	-- Check alt list
 	if db.AutoCompleteAlts then
+	   for pass = 1,2 do
 		local db = Postal.db.global.BlackBook.alts
 		for i = 1, #db do
 			local p, r, f = strsplit("|", db[i])
-			if r == realm and f == faction and p ~= player then
+			if r == realm and p ~= player and
+			( (pass == 1 and f ~= faction) or
+			  (pass == 2 and f == faction) ) -- prefer same faction, but don't require for alts
+			then
 				if strfind(strupper(p), text, 1, 1) == 1 then
 					newname = p
 					break
 				end
 			end
 		end
+	   end
 	end
 
 
@@ -503,7 +509,7 @@ function Postal_BlackBook.BlackBookMenu(self, level)
 			info.notCheckable = 1
 			for i = 1, #db do
 				local p, r, f, l, c = strsplit("|", db[i])
-				if r == realm and f == faction and p ~= player then
+				if r == realm and p ~= player then
 					if l and c then
 						local clr = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[c] or RAID_CLASS_COLORS[c]
 						info.text = format("%s |cff%.2x%.2x%.2x(%d %s)|r", p, clr.r*255, clr.g*255, clr.b*255, l, LOCALIZED_CLASS_NAMES_MALE[c])
@@ -565,8 +571,12 @@ elseif UIDROPDOWNMENU_MENU_VALUE == "allalt" then
 			info.hasArrow = 1
 			info.keepShownOnClick = 1
 			info.func = self.UncheckHack
-			info.value = "deletealt"
+			info.value = "deleteallalt"
 			UIDropDownMenu_AddButton(info, level)
+
+			if DropDownList2 then -- ensure long lists stay on screen
+				DropDownList2:SetClampedToScreen(true)
+			end
 
 		elseif UIDROPDOWNMENU_MENU_VALUE == "friend" then
 			-- Friends list
@@ -627,14 +637,17 @@ elseif UIDROPDOWNMENU_MENU_VALUE == "allalt" then
 
 	elseif level >= 3 then
 		info.notCheckable = 1
-		if UIDROPDOWNMENU_MENU_VALUE == "deletealt" then
+		if UIDROPDOWNMENU_MENU_VALUE == "deletealt" or UIDROPDOWNMENU_MENU_VALUE == "deleteallalt" then
+			local all = ( UIDROPDOWNMENU_MENU_VALUE == "deleteallalt" )
 			local db = Postal.db.global.BlackBook.alts
 			local realm = GetRealmName()
 			local faction = UnitFactionGroup("player")
 			local player = UnitName("player")
 			for i = 1, #db do
 				local p, r, f, l, c = strsplit("|", db[i])
-				if r == realm and f == faction and p ~= player then
+				if p ~= player and
+				   ( r == realm or all ) then
+				   	p = all and p.."-"..r or p
 					if l and c then
 						local clr = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[c] or RAID_CLASS_COLORS[c]
 						info.text = format("%s |cff%.2x%.2x%.2x(%d %s)|r", p, clr.r*255, clr.g*255, clr.b*255, l, LOCALIZED_CLASS_NAMES_MALE[c])
