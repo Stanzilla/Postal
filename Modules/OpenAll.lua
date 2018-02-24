@@ -1,4 +1,4 @@
-﻿local Postal = LibStub("AceAddon-3.0"):GetAddon("Postal")
+local Postal = LibStub("AceAddon-3.0"):GetAddon("Postal")
 local Postal_OpenAll = Postal:NewModule("OpenAll", "AceEvent-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("Postal")
 Postal_OpenAll.description = L["A button that collects all attachments and coins from mail."]
@@ -164,7 +164,7 @@ function Postal_OpenAll:ProcessNext()
 	-- (new mail received in the last 60 seconds))
 	local currentFirstMailDaysLeft = select(7, GetInboxHeaderInfo(1))
 	if currentFirstMailDaysLeft ~= 0 and currentFirstMailDaysLeft ~= firstMailDaysLeft then
-		-- First mail's daysLeft changed, indicating we have a 
+		-- First mail's daysLeft changed, indicating we have a
 		-- fresh MAIL_INBOX_UPDATE that has new data from CheckInbox()
 		-- so we reopen from the last mail
 		return self:OpenAll(true) -- tail call
@@ -212,7 +212,7 @@ function Postal_OpenAll:ProcessNext()
 		local mailType = Postal:GetMailType(msgSubject)
 		if mailType == "NonAHMail" then
 			-- Skip mail with attachments according to user options
-			if msgItem and Postal.db.profile.OpenAll.Postmaster and sender 
+			if msgItem and Postal.db.profile.OpenAll.Postmaster and sender
 			   and (sender:find(L["The Postmaster"]) 	-- unlooted items (npc=34337)
 			     or sender:find(L["Thaumaturge Vashreen"]))	-- bonus roll w/ bags full (npc=54441)
 			   then
@@ -384,7 +384,7 @@ function Postal_OpenAll.ModuleMenu(self, level)
 	wipe(info)
 	info.isNotRadio = 1
 	local db = Postal.db.profile.OpenAll
-	
+
 	if level == 1 + self.levelAdjust then
 		info.hasArrow = 1
 		info.keepShownOnClick = 1
@@ -462,7 +462,7 @@ function Postal_OpenAll.ModuleMenu(self, level)
 			info.arg2 = "SpamChat"
 			info.checked = db.SpamChat
 			UIDropDownMenu_AddButton(info, level)
-			
+
 			if IsAddOnLoaded("MrPlow") then
 				info.text = L["Use Mr.Plow after opening"]
 				info.hasArrow = nil
