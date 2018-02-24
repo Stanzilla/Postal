@@ -1,4 +1,4 @@
-﻿local Postal = LibStub("AceAddon-3.0"):NewAddon("Postal", "AceEvent-3.0", "AceHook-3.0")
+local Postal = LibStub("AceAddon-3.0"):NewAddon("Postal", "AceEvent-3.0", "AceHook-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("Postal")
 _G["Postal"] = Postal
 local TOC = select(4, GetBuildInfo())
