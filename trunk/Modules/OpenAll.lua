@@ -8,6 +8,8 @@ Postal_OpenAll.description2 = L[ [[|cFFFFCC00*|r Simple filters are available fo
 |cFFFFCC00*|r OpenAll will skip CoD mails and mails from Blizzard.
 |cFFFFCC00*|r Disable the Verbose option to stop the chat spam while opening mail.]] ]
 
+-- luacheck: globals InboxFrame
+
 local MAX_MAIL_SHOWN = 50
 local mailIndex, attachIndex
 local numUnshownItems
@@ -339,13 +341,6 @@ function Postal_OpenAll:ProcessNext()
 			return
 		end
 
-		if IsAddOnLoaded("MrPlow") and Postal.db.profile.OpenAll.UseMrPlow then
-			if MrPlow.DoStuff then
-				MrPlow:DoStuff("stack")
-			elseif MrPlow.ParseInventory then -- Backwards compat
-				MrPlow:ParseInventory()
-			end
-		end
 		if skipFlag then Postal:Print(L["Some Messages May Have Been Skipped."]) end
 		self:Reset()
 	end
@@ -462,16 +457,6 @@ function Postal_OpenAll.ModuleMenu(self, level)
 			info.arg2 = "SpamChat"
 			info.checked = db.SpamChat
 			UIDropDownMenu_AddButton(info, level)
-
-			if IsAddOnLoaded("MrPlow") then
-				info.text = L["Use Mr.Plow after opening"]
-				info.hasArrow = nil
-				info.value = nil
-				info.func = Postal.SaveOption
-				info.arg2 = "UseMrPlow"
-				info.checked = db.UseMrPlow
-				UIDropDownMenu_AddButton(info, level)
-			end
 		end
 
 	elseif level == 3 + self.levelAdjust then
