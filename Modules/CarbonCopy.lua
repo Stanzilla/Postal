@@ -3,6 +3,8 @@ local Postal_CarbonCopy = Postal:NewModule("CarbonCopy", "AceHook-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("Postal")
 Postal_CarbonCopy.description = L["Allows you to copy the contents of a mail."]
 
+-- luacheck: globals InboxFrame OpenMailScrollFrame
+
 function Postal_CarbonCopy:OnEnable()
 	self:Hook("OpenMail_Update", true)
 	if OpenMailScrollFrame:IsVisible() then

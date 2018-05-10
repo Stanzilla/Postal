@@ -9,6 +9,8 @@ Postal_Select.description2 = L[ [[|cFFFFCC00*|r Selected mail will be batch open
 |cFFFFCC00*|r Select will skip CoD mails and mails from Blizzard.
 |cFFFFCC00*|r Disable the Verbose option to stop the chat spam while opening mail.]] ]
 
+-- luacheck: globals InboxFrame
+
 local _G = getfenv(0)
 local currentMode = nil
 local selectedMail = {}
@@ -344,7 +346,7 @@ function Postal_Select:ProcessNext()
 			if attachIndex > 0 and invFull then
 				local name, itemID, itemTexture, count, quality, canUse = GetInboxItem(mailIndex, attachIndex)
 				local link = GetInboxItemLink(mailIndex, attachIndex)
-				local itemID = strmatch(link, "item:(%d+)")
+				itemID = strmatch(link, "item:(%d+)")
 				local stackSize = select(8, GetItemInfo(link))
 				if itemID and stackSize and GetItemCount(itemID) > 0 then
 					for bag = 0, NUM_BAG_SLOTS do
@@ -417,13 +419,6 @@ function Postal_Select:ProcessNext()
 
 	else
 		-- Reached the end of opening all selected mail
-		if IsAddOnLoaded("MrPlow") and Postal.db.profile.Select.UseMrPlow then
-			if MrPlow.DoStuff then
-				MrPlow:DoStuff("stack")
-			elseif MrPlow.ParseInventory then -- Backwards compat
-				MrPlow:ParseInventory()
-			end
-		end
 		if skipFlag then Postal:Print(L["Some Messages May Have Been Skipped."]) end
 		self:Reset()
 	end
@@ -559,19 +554,6 @@ function Postal_Select.ModuleMenu(self, level)
 		info.checked = Postal.db.profile.Select.SpamChat
 		info.isNotRadio = 1
 		UIDropDownMenu_AddButton(info, level)
-
-		if IsAddOnLoaded("MrPlow") then
-			info.text = L["Use Mr.Plow after opening"]
-			info.hasArrow = nil
-			info.value = nil
-			info.func = Postal.SaveOption
-			info.arg1 = "Select"
-			info.arg2 = "UseMrPlow"
-			info.checked = Postal.db.profile.Select.UseMrPlow
-			info.isNotRadio = 1
-			UIDropDownMenu_AddButton(info, level)
-		end
-
 	elseif level == 2 + self.levelAdjust then
 		if UIDROPDOWNMENU_MENU_VALUE == "KeepFreeSpace" then
 			local keepFree = Postal.db.profile.Select.KeepFreeSpace

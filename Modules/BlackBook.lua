@@ -5,6 +5,8 @@ Postal_BlackBook.description = L["Adds a contact list next to the To: field."]
 Postal_BlackBook.description2 = L[ [[|cFFFFCC00*|r This module will list your contacts, friends, guild mates, alts and track the last 10 people you mailed.
 |cFFFFCC00*|r It will also autocomplete all names in your BlackBook.]] ]
 
+-- luacheck: globals AUTOCOMPLETE_FLAG_ALL AUTOCOMPLETE_FLAG_BNET AUTOCOMPLETE_FLAG_NONE AUTOCOMPLETE_FLAG_FRIEND AUTOCOMPLETE_FLAG_IN_GUILD
+
 local Postal_BlackBookButton
 local numFriendsOnList = 0
 local sorttable = {}
@@ -645,9 +647,8 @@ elseif UIDROPDOWNMENU_MENU_VALUE == "allalt" then
 			local player = UnitName("player")
 			for i = 1, #db do
 				local p, r, f, l, c = strsplit("|", db[i])
-				if p ~= player and
-				   ( r == realm or all ) then
-				   	p = all and p.."-"..r or p
+				if p ~= player and ( r == realm or all ) then
+					p = all and p.."-"..r or p
 					if l and c then
 						local clr = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[c] or RAID_CLASS_COLORS[c]
 						info.text = format("%s |cff%.2x%.2x%.2x(%d %s)|r", p, clr.r*255, clr.g*255, clr.b*255, l, LOCALIZED_CLASS_NAMES_MALE[c])
