@@ -1,4 +1,4 @@
-## Interface: 70300
+## Interface: 80000
 ## Title: Postal
 ## Version: @project-version@
 ## X-Build: @project-revision@
