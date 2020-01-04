@@ -1,11 +1,11 @@
-## Interface: 80000
+## Interface: 80205
 ## Title: Postal
 ## Version: @project-version@
 ## X-Build: @project-revision@
 ## X-ReleaseDate: @project-date-iso@
 ## X-Revision: $Revision$
 ## Author: Xinhuan
-## X-Credits: Ammo, Rabbit, Grennon, Mikk, oscarucb
+## X-Credits: Ammo, Rabbit, Grennon, Mikk, oscarucb, Jonny aka The_Original_Manbot
 ## X-Category: Mail
 ## Notes: Postal: Enhanced Mailbox support
 ## Notes-ruRU: Postal: Расширенная поддержка почтового ящика
@@ -19,7 +19,7 @@
 
 ## LoadManagers: AddonLoader
 ## X-LoadOn-Mailbox: true
-## X-Email: xinhuan AT gmail DOT com
+## X-Email: jonny AT jmbg DOT net
 
 #@no-lib-strip@
 Libs\LibStub\LibStub.lua
