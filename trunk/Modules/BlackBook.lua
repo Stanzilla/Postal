@@ -357,9 +357,9 @@ end
 
 function Postal_BlackBook:SortAndCountNumFriends()
 	wipe(sorttable)
-	local numFriends = GetNumFriends()
+	local numFriends = C_FriendList.GetNumFriends()
 	for i = 1, numFriends do
-		sorttable[i] = GetFriendInfo(i)
+		sorttable[i] = C_FriendList.GetFriendInfo(i)
 	end
 
 	-- removed lines causing issues
