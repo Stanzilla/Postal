@@ -510,6 +510,9 @@ function Postal.About()
 	end
 	tinsert(t, "-----")
 	tinsert(t, L["Please post bugs or suggestions on the curseforge Postal page |cFF00FFFFhttps://www.curseforge.com/wow/addons/postal/issues|r. When posting bugs, indicate your locale and Postal's version number v%s."]:format(version))
+	tinsert(t, "")
+	tinsert(t, "- Xinhuan (Blackrock/Barthilas US Alliance)")
+	tinsert(t, "")
 	Postal.aboutFrame.editBox:SetText(table.concat(t, "\n"))
 	Postal.aboutFrame:Show()
 	wipe(t) -- For garbage collection
