@@ -52,7 +52,7 @@ function Postal_BlackBook:OnEnable()
 		self:RawHookScript(SendMailNameEditBox, "OnChar")
 	end
 	self:HookScript(SendMailNameEditBox, "OnEditFocusGained")
---	self:RawHook("AutoComplete_Update", true) <-- Feature disabled to address issue #231
+	self:SecureHook("AutoComplete_Update")
 	self:RegisterEvent("MAIL_SHOW")
 	self:RegisterEvent("PLAYER_ENTERING_WORLD", "AddAlt")
 
@@ -211,11 +211,11 @@ function Postal_BlackBook:OnEditFocusGained(editbox, ...)
 	SendMailNameEditBox:HighlightText()
 end
 
---function Postal_BlackBook:AutoComplete_Update(editBox, editBoxText, utf8Position, ...) <-- Feature disabled to address issue #231
---	if editBox ~= SendMailNameEditBox or not Postal.db.profile.BlackBook.DisableBlizzardAutoComplete then
---		self.hooks["AutoComplete_Update"](editBox, editBoxText, utf8Position, ...)
---	end
---end
+function Postal_BlackBook:AutoComplete_Update(parent, text, cursorPosition)
+	if parent == SendMailNameEditBox and Postal.db.profile.BlackBook.DisableBlizzardAutoComplete then
+		AutoComplete_HideIfAttachedTo(parent)
+	end
+end
 
 -- OnChar fires before OnTextChanged
 -- OnChar does not fire for Backspace, Delete keys that shorten the text
@@ -771,11 +771,11 @@ function Postal_BlackBook.ModuleMenu(self, level)
 			info.checked = db.ExcludeRandoms
 			UIDropDownMenu_AddButton(info, level)
 
---			info.text = L["Disable Blizzard's auto-completion popup menu"] <-- Feature disabled to address issue #231
---			info.arg2 = "DisableBlizzardAutoComplete"
---			info.checked = db.DisableBlizzardAutoComplete
---			info.func = Postal.SaveOption
---			UIDropDownMenu_AddButton(info, level)
+			info.text = L["Disable Blizzard's auto-completion popup menu"]
+			info.arg2 = "DisableBlizzardAutoComplete"
+			info.checked = db.DisableBlizzardAutoComplete
+			info.func = Postal.SaveOption
+			UIDropDownMenu_AddButton(info, level)
 		end
 	end
 end
