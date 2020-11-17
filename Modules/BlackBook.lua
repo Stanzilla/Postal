@@ -566,6 +566,10 @@ function Postal_BlackBook.BlackBookMenu(self, level)
 					UIDropDownMenu_AddButton(info, level)
 				end
 			end
+			-- ensure long lists stay on screen
+			if DropDownList2 then DropDownList2:SetClampedToScreen(true) end
+			if DropDownList3 then DropDownList3:SetClampedToScreen(true) end
+			if DropDownList4 then DropDownList4:SetClampedToScreen(true) end
 
 elseif UIDROPDOWNMENU_MENU_VALUE == "allalt" then
 			if not enableAllAltsMenu then return end
