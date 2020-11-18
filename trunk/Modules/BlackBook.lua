@@ -710,6 +710,7 @@ elseif UIDROPDOWNMENU_MENU_VALUE == "allalt" then
 			local startIndex = tonumber(strmatch(UIDROPDOWNMENU_MENU_VALUE, "deleteminaltdelpart(%d+)")) * 25 - 24
 			local endIndex = math.min(startIndex+24, Postal_BlackBook:NumAlts())
 			for i = startIndex, endIndex do
+				local name = sorttable[i]
 				local p, r, f, l, c = strsplit("|", db[i])
 					p = all and p.."-"..r or p
 					if l and c then
@@ -758,9 +759,9 @@ elseif UIDROPDOWNMENU_MENU_VALUE == "allalt" then
 				if (pr ~= plre ) then
 					if l and c then
 						local clr = CUSTOM_CLASS_COLORS and CUSTOM_CLASS_COLORS[c] or RAID_CLASS_COLORS[c]
-						info.text = format("%s-%s |cff%.2x%.2x%.2x(%d %s)|r", p, r, clr.r*255, clr.g*255, clr.b*255, l, LOCALIZED_CLASS_NAMES_MALE[c])
+						info.text = format("%s |cff%.2x%.2x%.2x(%d %s)|r", p, clr.r*255, clr.g*255, clr.b*255, l, LOCALIZED_CLASS_NAMES_MALE[c])
 					else
-						info.text = ("%s-%s"):format(p, r)
+						info.text = p
 					end
 					info.func = Postal_BlackBook.SetSendMailName
 					info.arg1 = ("%s-%s"):format(p, r)
