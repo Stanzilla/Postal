@@ -14,14 +14,14 @@ end
 
 -- Create Forward button and hook OnClick event
 function Postal_Forward:OnEnable()
-	if not button then
-		button = CreateFrame("Button", "OpenMailForwardButton", OpenMailFrame, "UIPanelButtonTemplate")
-		button:SetWidth(82)
-		button:SetHeight(22)
-		button:SetPoint("RIGHT", "OpenMailReplyButton", "LEFT", 0, 0)
-		button:SetText(L["Forward"])
-		button:SetScript("OnClick", function() Postal_Forward_OpenMail_Forward() end)
-		button:SetFrameLevel(button:GetFrameLevel() + 1)
+	if not PostalForwardButton then
+		PostalForwardButton = CreateFrame("Button", "OpenMailForwardButton", OpenMailFrame, "UIPanelButtonTemplate")
+		PostalForwardButton:SetWidth(82)
+		PostalForwardButton:SetHeight(22)
+		PostalForwardButton:SetPoint("RIGHT", "OpenMailReplyButton", "LEFT", 0, 0)
+		PostalForwardButton:SetText(L["Forward"])
+		PostalForwardButton:SetScript("OnClick", function() Postal_Forward_OpenMail_Forward() end)
+		PostalForwardButton:SetFrameLevel(button:GetFrameLevel() + 1)
 	end
 	if OpenMailForwardButton then OpenMailForwardButton:Show() end
 	self:SecureHook("InboxFrame_OnClick", Postal_Forward_OpenMailFrameUpdated)
