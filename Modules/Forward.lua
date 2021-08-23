@@ -21,7 +21,7 @@ function Postal_Forward:OnEnable()
 		PostalForwardButton:SetPoint("RIGHT", "OpenMailReplyButton", "LEFT", 0, 0)
 		PostalForwardButton:SetText(L["Forward"])
 		PostalForwardButton:SetScript("OnClick", function() Postal_Forward_OpenMail_Forward() end)
-		PostalForwardButton:SetFrameLevel(button:GetFrameLevel() + 1)
+		PostalForwardButton:SetFrameLevel(PostalForwardButton:GetFrameLevel() + 1)
 	end
 	if OpenMailForwardButton then OpenMailForwardButton:Show() end
 	self:SecureHook("InboxFrame_OnClick", Postal_Forward_OpenMailFrameUpdated)
