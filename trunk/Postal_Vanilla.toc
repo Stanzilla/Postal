@@ -1,4 +1,4 @@
-## Interface: 11402
+## Interface: 11403
 ## Title: Postal
 ## Version: @project-version@
 ## X-Build: @project-revision@
@@ -45,3 +45,4 @@ Modules\BlackBook.lua
 Modules\DoNotWant.lua
 Modules\CarbonCopy.lua
 Modules\Forward.lua
+Modules\QuickAttach.lua
