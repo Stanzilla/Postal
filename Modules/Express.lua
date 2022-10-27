@@ -8,36 +8,6 @@ Postal_Express.description2 = L[ [[|cFFFFCC00*|r Shift-Click to take item/money 
 
 local _G = getfenv(0)
 
-function Postal_Express:MAIL_SHOW()
-	if Postal.db.profile.Express.EnableAltClick and not self:IsHooked(GameTooltip, "OnTooltipSetItem") then
-		self:HookScript(GameTooltip, "OnTooltipSetItem")
-		self:RawHook("ContainerFrameItemButton_OnModifiedClick", true)
-	end
-	self:RegisterEvent("MAIL_CLOSED", "Reset")
-	self:RegisterEvent("PLAYER_LEAVING_WORLD", "Reset")
-end
-
-function Postal_Express:Reset(event)
-	if self:IsHooked(GameTooltip, "OnTooltipSetItem") then
-		self:Unhook(GameTooltip, "OnTooltipSetItem")
-		self:Unhook("ContainerFrameItemButton_OnModifiedClick")
-	end
-	self:UnregisterEvent("MAIL_CLOSED")
-	self:UnregisterEvent("PLAYER_LEAVING_WORLD")
-end
-
-function Postal_Express:OnEnable()
-	self:RawHook("InboxFrame_OnClick", true)
-	self:RawHook("InboxFrame_OnModifiedClick", "InboxFrame_OnClick", true) -- Eat all modified clicks too
-	self:RawHook("InboxFrameItem_OnEnter", true)
-
-	self:RegisterEvent("MAIL_SHOW")
-end
-
--- Disabling modules unregisters all events/hook automatically
---function Postal_Express:OnDisable()
---end
-
 local Postal_Express_cTip = CreateFrame("GameTooltip",'MailBagScanTooltip',nil,"GameTooltipTemplate")
 local function Postal_Express_IsSoulbound(bag, slot)
     Postal_Express_cTip:SetOwner(UIParent, "ANCHOR_NONE")
@@ -52,6 +22,109 @@ local function Postal_Express_IsSoulbound(bag, slot)
     Postal_Express_cTip:Hide()
     return false
 end
+
+function Postal_Express:MAIL_SHOW()
+	if Postal.db.profile.Express.EnableAltClick and not self:IsHooked(GameTooltip, "OnTooltipSetItem") then
+		self:HookScript(GameTooltip, "OnTooltipSetItem")
+		hooksecurefunc("HandleModifiedItemClick", function(itemLink, itemLocation)
+			if itemLocation ~= nil then -- item location is only not nil for bag item clicks
+				local button = GetMouseButtonClicked()
+				if button == "LeftButton" and IsAltKeyDown() and SendMailFrame:IsVisible() and not CursorHasItem() then
+				local bag, slot = itemLocation.bagID, itemLocation.slotIndex
+				local texture, count = GetContainerItemInfo(bag, slot)
+				PickupContainerItem(bag, slot)
+				ClickSendMailItemButton()
+				if Postal.db.profile.Express.AutoSend then
+					for i = 1, ATTACHMENTS_MAX_SEND do
+						-- get info about the attachment
+						local itemName, itemID, itemTexture, stackCount, quality = GetSendMailItem(i)
+						if SendMailNameEditBox:GetText() ~= "" and texture == itemTexture and count == stackCount then
+							SendMailFrame_SendMail()
+						end
+					end
+				end
+				elseif button == "LeftButton" and IsControlKeyDown() and SendMailFrame:IsVisible() and not CursorHasItem() then
+					local bag, slot = itemLocation.bagID, itemLocation.slotIndex
+					local itemid = GetContainerItemID(bag, slot)
+					if not itemid then return end
+					local itemlocked = select(3,GetContainerItemInfo(bag,slot))
+					local itemq, _,_, itemc, itemsc, _, itemes = select(3,GetItemInfo(itemid))
+					itemes = itemes and #itemes > 0
+					if Postal.db.profile.Express.BulkSend and itemq and itemc then
+						local itemsinmail = 0
+						for iloop = 1, ATTACHMENTS_MAX_SEND do
+							if HasSendMailItem(iloop) then itemsinmail = itemsinmail + 1 end
+						end
+						-- itemc = itemq.."."..itemc
+						itemsc = itemc.."."..(itemsc or "")
+						local added = (itemlocked and 0) or -1
+						for pass = 0,4 do
+							for b = 0,4 do
+								for s = 1, GetContainerNumSlots(b) do
+									local tid = GetContainerItemID(b, s)
+									if not tid or select(3,GetContainerItemInfo(b,s)) or Postal_Express_IsSoulbound(b, s) then
+										-- item locked, already attached, soulbound
+									else
+										local tq, _,_, tc, tsc, _, tes = select(3,GetItemInfo(tid))
+										-- tc = (tq or "").."."..(tc or "")
+										tsc = (tc or "").."."..(tsc or "")
+										tes = tes and #tes > 0
+										if (pass == 0 and itemq == 0 and tq == 0) -- vendor trash
+										or (pass == 0 and itemq == 2 and tq == 2 and itemes and tes) -- green boe gear
+										or (pass == 1 and tid == itemid) -- identical items
+										or (pass == 2 and tsc == itemsc) -- same subtype
+										or (pass == 3 and tc == itemc)   -- same type
+										or (pass == 4 and tq == itemq)   -- same quality
+										then
+											ClearCursor()
+											PickupContainerItem(b, s)
+											ClickSendMailItemButton()
+											if select(3,GetContainerItemInfo(b,s)) then -- now locked => added
+												added = added + 1
+												itemsinmail = itemsinmail + 1
+												if itemsinmail >= ATTACHMENTS_MAX_SEND then
+													ClearCursor()
+													return
+												end
+											else -- failed
+												ClearCursor()
+											end
+										end
+									end
+								end
+							end
+							if added >= 1 then break end
+						end
+						ClearCursor()
+					end
+				else
+					return
+				end
+			end
+		end)
+	end
+	self:RegisterEvent("MAIL_CLOSED", "Reset")
+	self:RegisterEvent("PLAYER_LEAVING_WORLD", "Reset")
+end
+
+function Postal_Express:Reset(event)
+	if self:IsHooked(GameTooltip, "OnTooltipSetItem") then
+		self:Unhook(GameTooltip, "OnTooltipSetItem")
+	end
+	self:UnregisterEvent("MAIL_CLOSED")
+	self:UnregisterEvent("PLAYER_LEAVING_WORLD")
+end
+
+function Postal_Express:OnEnable()
+	self:RawHook("InboxFrame_OnClick", true)
+	self:RawHook("InboxFrameItem_OnEnter", true)
+
+	self:RegisterEvent("MAIL_SHOW")
+end
+
+-- Disabling modules unregisters all events/hook automatically
+--function Postal_Express:OnDisable()
+--end
 
 function Postal_Express:InboxFrameItem_OnEnter(this, motion)
 	self.hooks["InboxFrameItem_OnEnter"](this, motion)
@@ -107,80 +180,6 @@ function Postal_Express:OnTooltipSetItem(tooltip, ...)
 	end
 	if Postal.db.profile.Express.BulkSend and SendMailFrame:IsVisible() and not CursorHasItem() then
 		tooltip:AddLine(L["|cffeda55fControl-Click|r to attach similar items."])
-	end
-end
-
-function Postal_Express:ContainerFrameItemButton_OnModifiedClick(this, button, ...)
-	if button == "LeftButton" and IsAltKeyDown() and SendMailFrame:IsVisible() and not CursorHasItem() then
-		local bag, slot = this:GetParent():GetID(), this:GetID()
-		local texture, count = GetContainerItemInfo(bag, slot)
-		PickupContainerItem(bag, slot)
-		ClickSendMailItemButton()
-		if Postal.db.profile.Express.AutoSend then
-			for i = 1, ATTACHMENTS_MAX_SEND do
-				-- get info about the attachment
-				local itemName, itemID, itemTexture, stackCount, quality = GetSendMailItem(i)
-				if SendMailNameEditBox:GetText() ~= "" and texture == itemTexture and count == stackCount then
-					SendMailFrame_SendMail()
-				end
-			end
-		end
-	elseif button == "LeftButton" and IsControlKeyDown() and SendMailFrame:IsVisible() and not CursorHasItem() then
-		local bag, slot = this:GetParent():GetID(), this:GetID()
-		local itemid = GetContainerItemID(bag, slot)
-		if not itemid then return end
-		local itemlocked = select(3,GetContainerItemInfo(bag,slot))
-		local itemq, _,_, itemc, itemsc, _, itemes = select(3,GetItemInfo(itemid))
-		itemes = itemes and #itemes > 0
-		if Postal.db.profile.Express.BulkSend and itemq and itemc then
-			local itemsinmail = 0
-			for iloop = 1, ATTACHMENTS_MAX_SEND do
-				if HasSendMailItem(iloop) then itemsinmail = itemsinmail + 1 end
-			end
-			-- itemc = itemq.."."..itemc
-			itemsc = itemc.."."..(itemsc or "")
-			local added = (itemlocked and 0) or -1
-			for pass = 0,4 do
-				for b = 0,4 do
-					for s = 1, GetContainerNumSlots(b) do
-						local tid = GetContainerItemID(b, s)
-						if not tid or select(3,GetContainerItemInfo(b,s)) or Postal_Express_IsSoulbound(b, s) then
-							-- item locked, already attached, soulbound
-						else
-							local tq, _,_, tc, tsc, _, tes = select(3,GetItemInfo(tid))
-							-- tc = (tq or "").."."..(tc or "")
-							tsc = (tc or "").."."..(tsc or "")
-							tes = tes and #tes > 0
-							if (pass == 0 and itemq == 0 and tq == 0) -- vendor trash
-							or (pass == 0 and itemq == 2 and tq == 2 and itemes and tes) -- green boe gear
-							or (pass == 1 and tid == itemid) -- identical items
-							or (pass == 2 and tsc == itemsc) -- same subtype
-							or (pass == 3 and tc == itemc)   -- same type
-							or (pass == 4 and tq == itemq)   -- same quality
-							then
-								ClearCursor()
-								PickupContainerItem(b, s)
-								ClickSendMailItemButton()
-								if select(3,GetContainerItemInfo(b,s)) then -- now locked => added
-									added = added + 1
-									itemsinmail = itemsinmail + 1
-									if itemsinmail >= ATTACHMENTS_MAX_SEND then
-										ClearCursor()
-										return
-									end
-								else -- failed
-									ClearCursor()
-								end
-							end
-						end
-					end
-				end
-				if added >= 1 then break end
-			end
-			ClearCursor()
-		end
-	else
-		return self.hooks["ContainerFrameItemButton_OnModifiedClick"](this, button, ...)
 	end
 end
 
